@@ -1,0 +1,41 @@
+# Calibration corpus — Python-majority public repositories.
+# Deliberately stratified: the bands are meaningless if the corpus is all
+# flagship OSS, because flagship OSS is not what the audience writes.
+#
+# tier  owner/repo
+flagship  psf/requests
+flagship  pallets/flask
+flagship  pallets/click
+flagship  pallets/jinja
+flagship  tiangolo/fastapi
+flagship  encode/httpx
+flagship  encode/starlette
+flagship  psf/black
+flagship  pydantic/pydantic
+flagship  python-attrs/attrs
+flagship  scrapy/scrapy
+flagship  benoitc/gunicorn
+mid  Textualize/rich
+mid  Textualize/textual
+mid  simonw/datasette
+mid  simonw/sqlite-utils
+mid  tqdm/tqdm
+mid  jd/tenacity
+mid  mahmoud/boltons
+mid  theskumar/python-dotenv
+mid  pallets/itsdangerous
+mid  jazzband/pip-tools
+mid  agronholm/apscheduler
+mid  marshmallow-code/marshmallow
+small  simonw/shot-scraper
+small  simonw/llm
+small  rsalmei/alive-progress
+small  erikrose/parsimonious
+small  kootenpv/yagmail
+small  jsvine/pdfplumber
+small  hugovk/norwegianblue
+small  carpedm20/emoji
+small  seatgeek/thefuzz
+small  lincolnloop/python-qrcode
+small  cdgriffith/Box
+small  chrisdonahue/wavegan

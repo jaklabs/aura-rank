@@ -2,11 +2,11 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.1.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.3.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
-|  AURA  ·  local scan  ·  spec v0.1.0                         |
+|  AURA  ·  local scan  ·  spec v0.3.0                         |
 +--------------------------------------------------------------+
 |  FORMED   49/100                                             |
 |  self-assessed — 4 of 8 dimensions measured                  |
@@ -141,20 +141,28 @@ a tool that asks you to trust it should not ask you to install forty packages fi
 - [x] Local scanner — git, tree, and Python AST signals
 - [x] Open scoring spec, versioned
 - [x] Terminal rank card
-- [ ] Calibration against a public corpus **← the honest blocker, see below**
+- [x] Calibration against a public corpus — bands anchored + validated
 - [ ] JS/TS and Go analyzers
 - [ ] `aura attest` (public signals, separate binary)
 - [ ] Witness protocol
 
-### Known: the scoring is not calibrated yet
+### Calibrated — with stated bias
 
-Current weights are reasoned, not fitted. On a sample of real production repositories they
-cluster in the 18–49 band, which is harsh — largely because they genuinely lack tests and
-CI, which is a true finding but not a well-distributed scale.
+Bands are set against a corpus of 36 public Python libraries plus a sample of real private
+work, and **validated rather than percentile-fitted** — fitting to the public corpus alone
+would put every genuine user in the bottom band. Reproduce it:
 
-**Calibration needs a corpus**, and until it has one the absolute number means less than
-the per-dimension breakdown. Said here rather than discovered by a user, because a ranking
-system that hides its own uncertainty deserves to be ignored.
+```bash
+python3 tools/calibrate.py --clone
+```
+
+Anchors: `pallets/flask` **90** (Apex) · `simonw/datasette` **83** · `psf/requests` **79** ·
+`scrapy/scrapy` **74**. A typical solo project lands 15–45.
+
+**The corpus is small (n=36), elite, and Python-only.** It anchors the top of the scale
+credibly and says little about the middle. The per-dimension breakdown is the useful output;
+the single number is provisional. Full method, the three bugs calibration exposed, and every
+known bias: **[tools/CALIBRATION.md](tools/CALIBRATION.md)**.
 
 ## Licence
 
