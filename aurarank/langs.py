@@ -304,6 +304,94 @@ def analyze_js(src: str, typed_lang: bool) -> dict:
     return a
 
 
+# ---------------------------------------------------------------------------
+# Test quality
+# ---------------------------------------------------------------------------
+
+# Markers of a test that exercises a failure path rather than a happy one.
+_EDGE = re.compile(
+    r"\b(None|null|undefined|empty|blank|nan|void|voided|raises|assertRaises"
+    r"|pytest\.raises|toThrow|Error|Exception|invalid|missing|absent|negative"
+    r"|zero|boundary|duplicate|conflict|timeout|malformed|stale|never|not_|no_"
+    r"|without|fails|failure|wrong|corrupt|unclear|ambiguous)\b", re.I)
+_JS_ASSERT = re.compile(r"\b(expect|assert|should|t\.(?:is|deepEqual|throws|truthy))\s*\(")
+
+
+def analyze_tests_python(src: str) -> dict:
+    """How substantive is a test file, judged without running it.
+
+    The tool cannot execute anything, so it cannot measure coverage. What it CAN
+    see is whether tests assert, whether they poke at failure paths, and how much
+    of the package they touch. Those are proxies -- stated as proxies -- but they
+    separate nineteen regression tests from eighty-three empty files, which a
+    file-count ratio cannot do at all.
+    """
+    out = {"test_fns": 0, "assertions": 0, "edge_fns": 0, "modules": set()}
+    try:
+        tree = ast.parse(src)
+    except (SyntaxError, ValueError):
+        return out
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            mod = getattr(node, "module", None) or ""
+            for alias in node.names:
+                out["modules"].add((mod or alias.name).split(".")[0])
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and \
+                node.name.startswith("test"):
+            out["test_fns"] += 1
+            # The real source of the test, not its AST repr. A dump mangles the
+            # words a human wrote, which are exactly the signal here -- a test
+            # named `..._is_a_safe_no_op` says what it covers.
+            lines = src.splitlines()[node.lineno - 1:(node.end_lineno or node.lineno)]
+            body = node.name + "\n" + "\n".join(lines)
+            n = sum(1 for x in ast.walk(node) if isinstance(x, ast.Assert))
+            n += sum(1 for x in ast.walk(node)
+                     if isinstance(x, ast.Call) and isinstance(x.func, ast.Attribute)
+                     and x.func.attr.startswith(("assert", "raises", "expect")))
+            out["assertions"] += n
+            if _EDGE.search(body):
+                out["edge_fns"] += 1
+    return out
+
+
+def analyze_tests_js(src: str) -> dict:
+    code = _blank_noncode(src)
+    fns = len(re.findall(r"\b(?:it|test)\s*\(", code))
+    asserts = len(_JS_ASSERT.findall(code))
+    edges = len(_EDGE.findall(src))
+    mods = set(re.findall(r"(?:from\s+|require\()\s*['\"]([^'\"]+)", code))
+    return {"test_fns": fns, "assertions": asserts,
+            "edge_fns": min(fns, edges), "modules": {m.split("/")[0] for m in mods}}
+
+
+def test_quality(acc: dict, source_modules: int) -> dict | None:
+    """0..1, or None when there are no tests to judge.
+
+    Three things, none of them a count of files:
+      assertion density -- a test that asserts nothing is theatre
+      edge coverage     -- tests that exercise failure paths, not just happy ones
+      module reach      -- how much of the package the suite actually touches
+    """
+    fns = acc.get("test_fns", 0)
+    if not fns:
+        return None
+    per_test = acc["assertions"] / fns
+    edge = acc["edge_fns"] / fns
+    reach = (len(acc["modules"]) / source_modules) if source_modules else 0.0
+
+    def band(v, lo, hi):
+        return max(0.0, min(1.0, (v - lo) / (hi - lo))) if hi > lo else 0.0
+
+    score = (0.45 * band(per_test, 0, 3.0)
+             + 0.35 * band(edge, 0, 0.5)
+             + 0.20 * band(reach, 0, 0.4))
+    return {"test_functions": fns,
+            "assertions_per_test": round(per_test, 2),
+            "edge_case_ratio": round(edge, 2),
+            "module_reach": round(reach, 3),
+            "quality": round(score, 3)}
+
+
 def summarize(a: dict) -> dict:
     """Accumulator -> the metrics the scorer consumes. Unmeasurable things are
     None, never zero -- a missing measurement and a bad one are different."""

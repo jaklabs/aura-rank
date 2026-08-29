@@ -2,7 +2,7 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.7.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.9.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
@@ -103,7 +103,7 @@ will not pretend otherwise.
 
 | Dimension | Source | Why |
 |---|---|---|
-| **Rigour** | measured | tests, CI, release tags, tenure, project shape |
+| **Rigour** | measured | test **breadth** and **depth**, CI, release tags, tenure, project shape |
 | **Architecture** | measured | function length + nesting distributions, substrate breadth, typing (`: any` doesn't count) |
 | **Judgment** | measured | revisit ratio, exception precision, cadence |
 | **Transmission** | measured | doc ratio, docstring coverage, contributors |
@@ -114,6 +114,19 @@ will not pretend otherwise.
 
 A system that claimed to measure whether you can map a messy business by reading your
 source would be obvious nonsense to exactly the people whose respect it needs.
+
+### Tests are judged, not counted
+
+A ratio of test files to source files rewards forty empty test functions over two
+that each encode a real incident — and makes the metric gameable by adding filler. So
+tests score twice: **breadth** (how much of the codebase has tests near it) and
+**depth** (do they assert, do they exercise failure paths, how much of the package do
+they touch).
+
+The tool never executes anything, so it **cannot measure coverage** — depth is a set of
+static proxies, and the payload says so in a `tests` block you can read. A repo with no
+tests reports depth as *unmeasured*, not zero: absent is already punished by breadth,
+and counting it twice would double-penalise.
 
 ### The load-bearing signal
 

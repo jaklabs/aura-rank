@@ -40,7 +40,7 @@ from pathlib import Path
 
 from . import langs
 
-SPEC_VERSION = "0.8.0"
+SPEC_VERSION = "0.9.0"
 
 
 def stable_hash(text: str) -> str:
@@ -364,9 +364,10 @@ def walk_sources(repo: Path):
             yield Path(root) / f
 
 
-def tree_signals(repo: Path) -> tuple[dict, list[Path]]:
+def tree_signals(repo: Path) -> tuple[dict, list[Path], list[Path]]:
     langs: Counter[str] = Counter()
     src: list[Path] = []
+    tests: list[Path] = []
     n_test = n_src = 0
     rel_all: list[str] = []
 
@@ -382,6 +383,7 @@ def tree_signals(repo: Path) -> tuple[dict, list[Path]]:
         langs[lang] += 1
         if TEST_HINT.search(rel):
             n_test += 1
+            tests.append(p)
         else:
             n_src += 1
             src.append(p)
@@ -428,12 +430,42 @@ def tree_signals(repo: Path) -> tuple[dict, list[Path]]:
         "packaged": packaged,
         "production_shape": has(IAC_MARKERS) or has(MIGRATION_MARKERS),
         "dependencies": deps,
-    }, src
+    }, src, tests
 
 
 # --------------------------------------------------------------------------
 # AST — parsed locally, only distributions emitted
 # --------------------------------------------------------------------------
+
+def test_signals(tests: list[Path], source_modules: int, cap: int = 200) -> dict | None:
+    """Judge the test suite itself, not how many files it spans.
+
+    A file-count ratio cannot tell nineteen regression tests from eighty-three
+    empty ones -- and it rewards the second. This reads the tests: do they
+    assert, do they exercise failure paths, how much of the package do they
+    touch. All proxies, because the tool never runs anything and therefore
+    cannot measure coverage. Stated as proxies in the payload.
+    """
+    acc = {"test_fns": 0, "assertions": 0, "edge_fns": 0, "modules": set()}
+    for f in tests[:cap]:
+        try:
+            text = f.read_text(errors="ignore")
+        except OSError:
+            continue
+        if langs.looks_generated(text):
+            continue
+        ext = f.suffix.lower()
+        if ext == ".py":
+            a = langs.analyze_tests_python(text)
+        elif ext in (".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"):
+            a = langs.analyze_tests_js(text)
+        else:
+            continue
+        for k in ("test_fns", "assertions", "edge_fns"):
+            acc[k] += a[k]
+        acc["modules"] |= a["modules"]
+    return langs.test_quality(acc, source_modules)
+
 
 def code_signals(files: list[Path], cap: int = 600) -> dict:
     """Analyze every language we can, then MERGE -- a polyglot repo is measured
@@ -495,7 +527,7 @@ def _weighted(parts: list[tuple[float, float | None]]) -> float:
     return sum(w * v for w, v in live) / total_w
 
 
-def score(g: dict, t: dict, p: dict) -> dict:
+def score(g: dict, t: dict, p: dict, tq: dict | None = None) -> dict:
     """Four of the eight dimensions are measurable from a repository.
 
     The other four -- Embed, Fundamentals, Reach, Renown -- are NOT inferable
@@ -517,8 +549,16 @@ def score(g: dict, t: dict, p: dict) -> dict:
     # the tool report 1.7 for people running four production systems, which reads
     # as a broken instrument rather than a real finding. A dimension whose name
     # misdescribes its contents is a defect on a tool asking to be trusted.
+    # Tests count twice, for different things. BREADTH is how much of the
+    # codebase has tests near it; DEPTH is whether those tests assert anything,
+    # poke at failure paths and touch more than one module. Scoring breadth alone
+    # rewarded eighty-three hollow files over nineteen that each prevent a real
+    # money error -- and made the metric trivially gameable by adding empty files.
+    # Depth is dropped, not zeroed, when a repo has no tests at all: absent is
+    # already punished by breadth, and counting it twice would double-penalise.
     rigour = 10 * _weighted([
-        (0.28, _band(t["test_ratio"], 0, 1.0)),
+        (0.18, _band(t["test_ratio"], 0, 1.0)),
+        (0.10, tq["quality"] if tq else None),
         (0.22, 1.0 if t["has_ci"] else 0.0),
         (0.20, _band(g.get("tags", 0), 0, 12)),
         (0.15, _band(g.get("tenure_days", 0), 60, 1825)),
@@ -569,14 +609,14 @@ def score(g: dict, t: dict, p: dict) -> dict:
 # almost every genuine user in the bottom band, which is both useless and wrong.
 # See tools/CALIBRATION.md for the method, the samples and the known bias.
 TIERS = [
-    (0,  14,  "Dormant",   "little engineering signal yet -- a scratch or scratch-shaped repo"),
-    (15, 29,  "Kindled",   "working code, shipped, but no test or CI discipline behind it"),
-    (30, 44,  "Drawn",     "discipline appearing -- some tests, some structure, held together"),
-    (45, 59,  "Formed",    "real practice: tested, documented, maintained over time"),
-    (60, 72,  "Marked",    "professional open-source standard -- others could rely on this"),
-    (73, 81,  "Sealed",    "a strong, well-maintained library others do rely on"),
-    (82, 88,  "Sovereign", "flagship quality -- among the best-run projects in its language"),
-    (89, 100, "Apex",      "best-in-class. Reference-grade engineering"),
+    (0,  33,  "Dormant",   "little engineering signal yet -- a scratch or scratch-shaped repo"),
+    (34, 42,  "Kindled",   "working code, shipped, but no test or CI discipline behind it"),
+    (43, 52,  "Drawn",     "discipline appearing -- some tests, some structure, held together"),
+    (53, 58,  "Formed",    "real practice: tested, documented, maintained over time"),
+    (59, 65,  "Marked",    "professional open-source standard -- others could rely on this"),
+    (66, 77,  "Sealed",    "a strong, well-maintained library others do rely on"),
+    (78, 84,  "Sovereign", "flagship quality -- among the best-run projects in its language"),
+    (85, 100, "Apex",      "best-in-class. Reference-grade engineering"),
 ]
 
 
@@ -595,9 +635,10 @@ def scan(path: str) -> dict:
         raise SystemExit(f"not a directory: {repo}")
 
     g = git_signals(repo)
-    t, src = tree_signals(repo)
+    t, src, test_files = tree_signals(repo)
     p = code_signals(src)
-    s = score(g, t, p)
+    tq = test_signals(test_files, t["source_files"])
+    s = score(g, t, p, tq)
 
     return {
         "spec_version": SPEC_VERSION,
@@ -607,6 +648,7 @@ def scan(path: str) -> dict:
         "git": g,
         "tree": t,
         "code": p,
+        "tests": tq,
         **s,
         "grade": tier_of(s["measured_score"])[0],
         "grade_means": tier_of(s["measured_score"])[1],

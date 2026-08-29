@@ -76,6 +76,49 @@ def test_python_still_works():
     assert s["except_precision"] == 1.0
 
 
+# --- test quality -----------------------------------------------------------
+
+REAL = '''
+def test_a_missing_issue_number_is_a_safe_no_op():
+    """Never crash, and never claim clear as though it checked."""
+    r = guard.check(None)
+    assert r["alreadyBilled"] is False
+    assert "no issue" in r["verdict"]
+
+def test_a_voided_invoice_does_not_block_a_rebill():
+    r = guard.check("103384", invoices=[{"TotalAmt": 0}])
+    assert r["paid"] == []
+'''
+
+HOLLOW = "\n".join(f"def test_{i}(): pass" for i in range(40))
+
+
+def test_hollow_test_files_cannot_game_the_score():
+    """The whole reason this exists.
+
+    A file-count ratio rewards forty empty test functions over two that each
+    encode a real incident. Depth has to invert that, or the metric is an
+    invitation to write filler.
+    """
+    real = langs.test_quality(langs.analyze_tests_python(REAL), source_modules=10)
+    hollow = langs.test_quality(langs.analyze_tests_python(HOLLOW), source_modules=10)
+    assert real["quality"] > hollow["quality"] * 4
+    assert hollow["quality"] < 0.1
+
+
+def test_assertions_and_edge_cases_are_both_counted():
+    q = langs.test_quality(langs.analyze_tests_python(REAL), source_modules=10)
+    assert q["test_functions"] == 2
+    assert q["assertions_per_test"] >= 1.5
+    assert q["edge_case_ratio"] > 0        # "missing", "None", "voided"
+
+
+def test_no_tests_means_unmeasured_not_zero():
+    """A repo with no tests has no test QUALITY to report. Returning 0.0 would be
+    the fallback bug this project keeps producing -- absent is not bad."""
+    assert langs.test_quality(langs.analyze_tests_python("x = 1"), source_modules=10) is None
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

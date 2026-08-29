@@ -123,6 +123,33 @@ def test_the_documented_verification_command_is_honest():
         "verification command it recommends contradicts the source")
 
 
+def test_the_discovery_bot_never_computes_an_identity():
+    """The calibration bot must stay anonymous, enforced rather than promised.
+
+    It scores repositories, never people. A first pass at a NAMED roster
+    misattributed strangers' work to famous developers; a bot doing that across
+    thousands of repos continuously and publicly is the one failure a tool
+    selling verifiability cannot survive. So the separation is a test.
+    """
+    bot = PKG.parent / "tools" / "discover.py"
+    if not bot.exists():
+        return
+    tree = ast.parse(bot.read_text())
+    banned = {"attribution", "author_share", "commit_identities", "dominant_author"}
+    used = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            used |= {a.name for a in node.names} & banned
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            if node.func.id in banned:
+                used.add(node.func.id)
+    assert not used, f"discovery bot must not compute identity, but calls: {used}"
+
+    text = bot.read_text()
+    for leak in ('"%aE"', "'%aE'", '"%aN"', "'%aN'"):
+        assert leak not in text, f"discovery bot reads author metadata: {leak}"
+
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in sorted(globals().items()):
