@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -35,7 +36,18 @@ from pathlib import Path
 
 from . import langs
 
-SPEC_VERSION = "0.5.0"
+SPEC_VERSION = "0.6.0"
+
+
+def stable_hash(text: str) -> str:
+    """Deterministic across processes and machines.
+
+    Python's built-in hash() is salted per interpreter run, so identifiers hashed
+    with it changed on every invocation -- which made them useless for comparing
+    two scans and silently wrong in any payload that claimed to identify a repo.
+    """
+    return hashlib.blake2s(text.encode("utf-8", "replace"),
+                           digest_size=8).hexdigest()
 
 # Directories that are never signal, only noise.
 SKIP_DIRS = {
@@ -108,7 +120,7 @@ def git_signals(repo: Path) -> dict:
             continue
         times.append(ts)
         # The address is hashed immediately; the raw value is never stored or emitted.
-        authors[str(hash(parts[1].strip().lower()) % (10**9))] += 1
+        authors[stable_hash(parts[1].strip().lower())] += 1
         months.add(datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m"))
 
     if not times:
@@ -179,6 +191,30 @@ def _revisit_ratio(repo: Path) -> float | None:
         return None
     multi = sum(1 for m in touched.values() if len(m) > 1)
     return round(multi / len(touched), 3)
+
+
+def author_share(repo: Path, emails: set[str]) -> float | None:
+    """What fraction of this repository's commits are yours.
+
+    A repo you contributed three commits to is not your work, and a vendored
+    clone is not your work at all. Aggregation weights by this so a portfolio
+    reflects what someone actually built.
+
+    Emails are compared as hashes; no address is stored or emitted.
+    """
+    log = _git(repo, "log", "--all", "--pretty=format:%aE")
+    if not log:
+        return None
+    wanted = {stable_hash(e.strip().lower()) for e in emails}
+    total = mine = 0
+    for line in log.splitlines():
+        line = line.strip().lower()
+        if not line:
+            continue
+        total += 1
+        if stable_hash(line) in wanted:
+            mine += 1
+    return round(mine / total, 3) if total else None
 
 
 # --------------------------------------------------------------------------
@@ -437,7 +473,7 @@ def scan(path: str) -> dict:
         "spec_version": SPEC_VERSION,
         "tier": "self-assessed",          # never anything else from this command
         "scanned_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "repo_name_hash": str(hash(repo.name) % (10**9)),   # not the name itself
+        "repo_name_hash": stable_hash(repo.name),   # not the name itself
         "git": g,
         "tree": t,
         "code": p,

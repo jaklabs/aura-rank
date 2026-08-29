@@ -2,7 +2,7 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.5.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.6.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
@@ -144,6 +144,7 @@ a tool that asks you to trust it should not ask you to install forty packages fi
 - [x] Open scoring spec, versioned
 - [x] Terminal rank card
 - [x] Calibration against a public corpus — bands anchored + validated
+- [x] Multi-repo aggregation — `aura portfolio`
 - [x] JS/TS analyzer — hand-written scanner, zero dependencies
 - [ ] Go and Rust analyzers
 - [ ] `aura attest` (public signals, separate binary)

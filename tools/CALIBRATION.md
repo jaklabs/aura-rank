@@ -1,6 +1,6 @@
 # Calibration — how the bands were set, and what's still wrong with them
 
-Spec `v0.5.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
+Spec `v0.6.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
 
 ## Why the first attempt was thrown away
 
@@ -91,8 +91,12 @@ Named anchors: `pallets/flask` **90** (Apex) · `simonw/datasette` **83** · `ps
 4. **`has_ci` is 97% true in the corpus.** It no longer discriminates *within* open source.
    It is kept because it discriminates sharply against typical private work, which is the
    population that will actually run this.
-5. **Repos are not developers.** A score describes one repository. A developer is not their
-   worst repo, and this tool does not yet aggregate across several.
+5. **Repos are not developers.** A single score describes one repository; use
+   `aura portfolio` for a person. Note that aggregation weights by commit share, which
+   **dilutes AI-assisted work** — a repo where an agent identity authored most commits
+   reads as less yours than it is. Known, unsolved, and stated rather than hidden.
+6. **`hash()` was unstable until v0.6.0.** Identifier hashes in payloads from earlier
+   versions changed on every run and cannot be compared. Fixed with blake2s.
 
 ## Round two — adding JavaScript/TypeScript (v0.4.0 → v0.5.0)
 
