@@ -8,16 +8,18 @@ Working name. Spec `v0.3.0`. Early, opinionated, and open on purpose.
 +--------------------------------------------------------------+
 |  AURA  ·  local scan  ·  spec v0.3.0                         |
 +--------------------------------------------------------------+
-|  FORMED   49/100                                             |
-|  self-assessed — 4 of 8 dimensions measured                  |
+|  APEX   90/100                                               |
+|  best-in-class. Reference-grade engineering                  |
+|  self-assessed · 4 of 8 dimensions measured                  |
 +--------------------------------------------------------------+
-|  ship           ############........  6.1                    |
-|  architecture   ###############.....  7.4                    |
-|  judgment       #########...........  4.3                    |
-|  transmission   ###########.........  5.5                    |
+|  ship           #################### 10.0                    |
+|  architecture   ###############.....  7.6                    |
+|  judgment       ###################.  9.4                    |
+|  transmission   ##################..  9.1                    |
 +--------------------------------------------------------------+
    Nothing left this machine.
 ```
+<sub>`pallets/flask`, scanned locally. Nothing about it left the machine.</sub>
 
 ---
 
@@ -94,10 +96,10 @@ will not pretend otherwise.
 
 | Dimension | Source | Why |
 |---|---|---|
-| **Ship** | measured | tests, CI, IaC, migrations, tenure |
+| **Ship** | measured | tests, CI, release tags, tenure, project shape |
 | **Architecture** | measured | function length + nesting distributions, substrate breadth, typing |
 | **Judgment** | measured | revisit ratio, exception precision, cadence |
-| **Transmission** | measured | docs, test ratio, contributors |
+| **Transmission** | measured | doc ratio, docstring coverage, contributors |
 | **Embed** | claim + witness | whether you can sit with a customer is not in your AST |
 | **Fundamentals** | optional challenge | a timed exercise, not a repo property |
 | **Reach** | attested | dependents, installs — public by nature |
