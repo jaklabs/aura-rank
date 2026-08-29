@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-aura portfolio — aggregate many repositories into one developer rank.
+nen portfolio — aggregate many repositories into one developer rank.
 
-    NO NETWORK. Same guarantee as `aura scan`, which this wraps.
+    NO NETWORK. Same guarantee as `nen scan`, which this wraps.
 
 A repository is not a person. This turns a pile of directories into a single
 profile, which needs three decisions the per-repo scanner never had to make:
@@ -23,7 +23,7 @@ profile, which needs three decisions the per-repo scanner never had to make:
                         typical work. None of that exists inside one repo.
 
 Usage:
-    python3 -m aura.portfolio ~/code/*/ [--me you@example.com] [--json out.json]
+    python3 -m nen.portfolio ~/code/*/ [--me you@example.com] [--json out.json]
 """
 
 from __future__ import annotations
@@ -231,7 +231,7 @@ def render(p: dict) -> str:
     bar = lambda v: "#" * int(round(v * 2)) + "." * (20 - int(round(v * 2)))
     s = p["portfolio_signals"]
     L = ["+" + "-" * w + "+",
-         f"|  AURA PORTFOLIO  ·  {p['repos_scanned']} repos  ·  spec v{p['spec_version']}".ljust(w) + " |",
+         f"|  NEN PORTFOLIO  ·  {p['repos_scanned']} repos  ·  spec v{p['spec_version']}".ljust(w) + " |",
          "+" + "-" * w + "+",
          f"|  {p['grade'].upper()}   {p['score']}/100".ljust(w) + " |",
          f"|  {p['grade_means'][:w-4]}".ljust(w) + " |",
@@ -269,7 +269,7 @@ def render(p: dict) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(prog="aura portfolio", description=__doc__)
+    ap = argparse.ArgumentParser(prog="nen portfolio", description=__doc__)
     ap.add_argument("paths", nargs="+", help="repository directories")
     ap.add_argument("--me", action="append", default=[],
                     help="your git email (repeatable). Auto-detected if omitted.")

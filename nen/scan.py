@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-aura scan — local, offline developer signal extraction.
+nen scan — local, offline developer signal extraction.
 
     THIS FILE HAS NO NETWORK ACCESS.
 
@@ -8,16 +8,16 @@ It imports no HTTP client and opens no socket. That is not a promise in a privac
 policy, it is a property of the file you are reading, and you can verify it in one
 command before you ever run it:
 
-    grep -nE 'requests|urllib|http|socket|aiohttp|curl' aura/scan.py
+    grep -nE 'requests|urllib|http|socket|aiohttp|curl' nen/scan.py
 
 Your source code never leaves this machine. The output is integers and ratios --
 never source text, never file contents, never absolute paths, never identifiers.
 Print it and read it before you share it:
 
-    aura scan ./my-repo --print
+    nen scan ./my-repo --print
 
 Usage:
-    python3 -m aura.scan <path-to-git-repo> [--json out.json] [--print]
+    python3 -m nen.scan <path-to-git-repo> [--json out.json] [--print]
 """
 
 from __future__ import annotations
@@ -611,7 +611,7 @@ def render(r: dict) -> str:
     bar = lambda v: "#" * int(round(v * 2)) + "." * (20 - int(round(v * 2)))
     out = [
         "+" + "-" * w + "+",
-        f"|  AURA  ·  local scan  ·  spec v{r['spec_version']}".ljust(w) + " |",
+        f"|  NEN   ·  local scan  ·  spec v{r['spec_version']}".ljust(w) + " |",
         "+" + "-" * w + "+",
         f"|  {r['grade'].upper()}   {r['measured_score']}/100".ljust(w) + " |",
         f"|  {r['grade_means'][:w-4]}".ljust(w) + " |",
@@ -635,7 +635,7 @@ def render(r: dict) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(prog="aura scan", description=__doc__)
+    ap = argparse.ArgumentParser(prog="nen scan", description=__doc__)
     ap.add_argument("path", help="path to a git repository")
     ap.add_argument("--json", metavar="FILE", help="write the payload to a file")
     ap.add_argument("--print", action="store_true", dest="show",

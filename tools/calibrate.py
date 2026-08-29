@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-aura calibrate — fit the tier bands against a corpus of public repositories.
+nen calibrate — fit the tier bands against a corpus of public repositories.
 
-    THIS TOOL USES THE NETWORK. `aura/scan.py` DOES NOT.
+    THIS TOOL USES THE NETWORK. `nen/scan.py` DOES NOT.
 
 That separation is deliberate and load-bearing: the scanner people run on their
 own machines must be provably offline, so everything that touches the network
@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from aura.scan import scan  # noqa: E402
+from nen.scan import scan  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS_DIR = ROOT / ".corpus"
@@ -145,8 +145,8 @@ def report(rows: list[dict]) -> dict:
     # it is 36 elite public libraries, and their median is ~78 while real
     # solo/private work sits near 26. Percentile-fitting one population puts
     # every genuine user in the bottom band. So the bands are anchored on
-    # meaning in aura/scan.py, and this function VALIDATES them instead.
-    from aura.scan import TIERS
+    # meaning in nen/scan.py, and this function VALIDATES them instead.
+    from nen.scan import TIERS
     print(f"\n{'='*72}\nBAND OCCUPANCY (anchored bands, validated here)\n{'='*72}")
     for lo, hi, name, blurb in TIERS:
         n = sum(1 for s_ in scores if lo <= s_ <= hi)
