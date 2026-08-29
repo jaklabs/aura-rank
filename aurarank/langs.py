@@ -6,7 +6,7 @@ Per-language source analyzers. Pure text in, counters out.
 Nothing here imports a network library, and nothing here evaluates or executes the
 source it reads -- it is only ever parsed or scanned as text:
 
-    grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aura/
+    grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aurarank/
 
 The package DOES use `subprocess`, in scan.py, exclusively to invoke `git` and
 read local history. That is the honest version of the claim, and a grep cannot

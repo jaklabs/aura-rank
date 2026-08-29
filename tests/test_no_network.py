@@ -7,7 +7,7 @@ so a pull request that adds `import requests` cannot merge.
 
 The invariant, stated exactly:
 
-  1. No module in `aura/` imports a network-capable library.
+  1. No module in `aurarank/` imports a network-capable library.
   2. `subprocess` IS used -- solely to invoke `git`, which reads local history.
      Every subprocess call must have the literal "git" as its executable.
   3. Nothing calls eval() or exec().
@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-PKG = pathlib.Path(__file__).resolve().parents[1] / "aura"
+PKG = pathlib.Path(__file__).resolve().parents[1] / "aurarank"
 
 NETWORK_MODULES = {
     "socket", "ssl", "http", "httplib", "urllib", "urllib2", "urllib3",
@@ -54,7 +54,7 @@ def test_no_network_imports_anywhere_in_the_package():
             elif isinstance(node, ast.ImportFrom):
                 if _root(node.module or "") in NETWORK_MODULES:
                     bad.append(f"{path.name}:{node.lineno} from {node.module}")
-    assert not bad, "network imports found in aura/: " + "; ".join(bad)
+    assert not bad, "network imports found in aurarank/: " + "; ".join(bad)
 
 
 def test_subprocess_is_only_ever_used_to_run_git():

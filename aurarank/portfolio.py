@@ -23,7 +23,7 @@ profile, which needs three decisions the per-repo scanner never had to make:
                         typical work. None of that exists inside one repo.
 
 Usage:
-    python3 -m aura.portfolio ~/code/*/ [--me you@example.com] [--json out.json]
+    python3 -m aurarank.portfolio ~/code/*/ [--me you@example.com] [--json out.json]
 """
 
 from __future__ import annotations

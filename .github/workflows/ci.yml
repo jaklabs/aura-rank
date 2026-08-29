@@ -38,11 +38,27 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Confirm there are no dependencies to install
+      - name: Confirm there are still no third-party dependencies
+        # Checks the property, not a proxy for it. Banning pyproject.toml outright
+        # would block PyPI packaging, which needs one and is not a dependency.
+        # What must stay true is that nothing third-party is declared.
         run: |
-          test ! -f requirements.txt && test ! -f pyproject.toml \
-            && echo "stdlib only, as advertised" || \
-            (echo "a dependency file appeared; the zero-dependency claim needs updating" && exit 1)
+          python3 - <<'PY'
+          import pathlib, re, sys
+          declared = []
+          req = pathlib.Path('requirements.txt')
+          if req.exists():
+              declared += [l.strip() for l in req.read_text().splitlines()
+                           if l.strip() and not l.strip().startswith('#')]
+          pyproject = pathlib.Path('pyproject.toml')
+          if pyproject.exists():
+              block = re.search(r'^dependencies\s*=\s*\[(.*?)\]',
+                                pyproject.read_text(), re.S | re.M)
+              if block:
+                  declared += [d for d in re.findall(r'["\']([^"\']+)["\']', block.group(1))]
+          assert not declared, f"third-party dependencies declared: {declared}"
+          print("stdlib only, as advertised")
+          PY
 
       - name: Language analyzers
         run: python3 tests/test_langs.py
@@ -55,16 +71,16 @@ jobs:
         # exercises git metadata, the tree walk, the AST pass and scoring together.
         run: |
           git fetch --unshallow 2>/dev/null || true
-          python3 -m aura.scan .
+          python3 -m aurarank.scan .
 
       - name: Aggregate a portfolio end to end
-        run: python3 -m aura.portfolio . --me ci@example.com --min-share 0
+        run: python3 -m aurarank.portfolio . --me ci@example.com --min-share 0
 
       - name: Payload leaks no source text and claims no verified tier
         # The scan output is meant to be shareable, so a path or a line of source
         # leaking into it is a privacy regression rather than a cosmetic one.
         run: |
-          python3 -m aura.scan . --json /tmp/payload.json > /dev/null
+          python3 -m aurarank.scan . --json /tmp/payload.json > /dev/null
           python3 - <<'PY'
           import json, pathlib
           data = json.loads(pathlib.Path('/tmp/payload.json').read_text())

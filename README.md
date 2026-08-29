@@ -62,7 +62,7 @@ Split the scan from the claim.
 the source, and you verify it yourself before you ever run the thing:
 
 ```bash
-grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aura/
+grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aurarank/
 ```
 
 The only matches are the docstrings telling you to run it.
@@ -79,7 +79,7 @@ paths, no email addresses (author identities are hashed on read and never stored
 exact payload before you share it with anyone:
 
 ```bash
-python3 -m aura.scan ./your-repo --print
+python3 -m aurarank.scan ./your-repo --print
 ```
 
 ## Three tiers of claim
@@ -137,9 +137,9 @@ If it works at all, people will game it. Design consequences:
 
 ```bash
 git clone <repo> && cd aura-rank
-python3 -m aura.scan ~/code/your-project          # stdlib only. no install, no deps.
-python3 -m aura.scan ~/code/your-project --print  # audit the exact payload
-python3 -m aura.scan ~/code/your-project --json me.json
+python3 -m aurarank.scan ~/code/your-project          # stdlib only. no install, no deps.
+python3 -m aurarank.scan ~/code/your-project --print  # audit the exact payload
+python3 -m aurarank.scan ~/code/your-project --json me.json
 ```
 
 Requires Python 3.9+ and `git`. Nothing else. There are no dependencies, deliberately —

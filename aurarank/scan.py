@@ -8,7 +8,7 @@ It imports no HTTP client and opens no socket. That is not a promise in a privac
 policy, it is a property of the file you are reading, and you can verify it in one
 command before you ever run it:
 
-    grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aura/
+    grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aurarank/
 
 It DOES use `subprocess`, below, for exactly one thing: running `git` to read your
 local commit history. Every call is checked by tests/test_no_network.py, which
@@ -21,7 +21,7 @@ Print it and read it before you share it:
     aura scan ./my-repo --print
 
 Usage:
-    python3 -m aura.scan <path-to-git-repo> [--json out.json] [--print]
+    python3 -m aurarank.scan <path-to-git-repo> [--json out.json] [--print]
 """
 
 from __future__ import annotations
