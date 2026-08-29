@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from math import log1p
 from pathlib import Path
 
+from .reference import REFERENCE, position
 from .scan import TIERS, _git, attribution, scan, stable_hash, tier_of
 
 # Fraction of total evidence-weight that defines the "core body of work".
@@ -226,6 +227,7 @@ def aggregate(repos: list[dict], months_union: set[str]) -> dict:
             "spread": max(all_scores) - int(statistics.median(all_scores)),
         },
         "repos": repos,
+        "position": position(score),
         "note": ("Aggregates only the repositories you pointed at. It cannot see "
                  "work you did not scan, and it does not verify authorship beyond "
                  "git metadata -- that is what the attested tier is for."),
@@ -273,8 +275,34 @@ def render(p: dict) -> str:
         L.append("\n  skipped")
         for n, why in p["skipped"][:8]:
             L.append(f"    {n[:34]:<34} {why}")
+    # "You are here": the measured reference set, with the caller slotted in.
+    # Deliberately a rank among named measurements, never a global percentile --
+    # there is no population here to compute one from.
+    pos = p.get("position")
+    if pos:
+        L += ["", f"  where that sits — {pos['rank']} of {pos['of']} measured portfolios",
+              f"  (reference measured {pos['reference_measured_at']}; "
+              f"a named set, NOT a census of developers)", ""]
+        placed = False
+        for r in REFERENCE:
+            if not placed and p["score"] >= r.score:
+                L.append(f"   >{p['score']:>4}  {'YOU':<22} craft {_c(p):>4}  rigour {_r(p):>4}")
+                placed = True
+            L.append(f"    {r.score:>4}  {r.name:<22} craft {r.craft:>4}  rigour {r.rigour:>4}")
+        if not placed:
+            L.append(f"   >{p['score']:>4}  {'YOU':<22} craft {_c(p):>4}  rigour {_r(p):>4}")
+
     L.append("\n  Nothing left this machine.")
     return "\n".join(L)
+
+
+def _c(p: dict) -> float:
+    d = p["dimensions"]
+    return round((d.get("architecture", 0) + d.get("judgment", 0)) / 2, 1)
+
+
+def _r(p: dict) -> float:
+    return p["dimensions"].get("ship", 0)
 
 
 def main() -> None:

@@ -1,0 +1,130 @@
+[
+  {
+    "name": "David Lord",
+    "score": 85,
+    "grade": "Sovereign",
+    "dimensions": {
+      "ship": 9.9,
+      "architecture": 7.3,
+      "judgment": 7.9,
+      "transmission": 8.8
+    },
+    "repos": 4,
+    "focus": 0.254,
+    "consistency": 0.987,
+    "best": 87,
+    "median": 83
+  },
+  {
+    "name": "Rich Harris",
+    "score": 84,
+    "grade": "Sovereign",
+    "dimensions": {
+      "ship": 10.0,
+      "architecture": 6.0,
+      "judgment": 8.9,
+      "transmission": 8.8
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 1.0,
+    "best": 84,
+    "median": 84
+  },
+  {
+    "name": "Sindre Sorhus",
+    "score": 80,
+    "grade": "Sealed",
+    "dimensions": {
+      "ship": 10.0,
+      "architecture": 7.4,
+      "judgment": 8.3,
+      "transmission": 6.3
+    },
+    "repos": 4,
+    "focus": 0.262,
+    "consistency": 0.967,
+    "best": 81,
+    "median": 78
+  },
+  {
+    "name": "Tom Christie",
+    "score": 80,
+    "grade": "Sealed",
+    "dimensions": {
+      "ship": 9.6,
+      "architecture": 7.1,
+      "judgment": 7.4,
+      "transmission": 7.8
+    },
+    "repos": 2,
+    "focus": 0.507,
+    "consistency": 1.0,
+    "best": 80,
+    "median": 79
+  },
+  {
+    "name": "Simon Willison",
+    "score": 79,
+    "grade": "Sealed",
+    "dimensions": {
+      "ship": 9.8,
+      "architecture": 5.0,
+      "judgment": 8.7,
+      "transmission": 8.1
+    },
+    "repos": 4,
+    "focus": 0.298,
+    "consistency": 0.981,
+    "best": 82,
+    "median": 77
+  },
+  {
+    "name": "Mitchell Hashimoto",
+    "score": 68,
+    "grade": "Marked",
+    "dimensions": {
+      "ship": 4.7,
+      "architecture": 7.7,
+      "judgment": 10.0,
+      "transmission": 4.9
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.93,
+    "best": 68,
+    "median": 68
+  },
+  {
+    "name": "Fabrice Bellard",
+    "score": 59,
+    "grade": "Formed",
+    "dimensions": {
+      "ship": 4.9,
+      "architecture": 7.1,
+      "judgment": 7.8,
+      "transmission": 3.8
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.357,
+    "best": 59,
+    "median": 59
+  },
+  {
+    "name": "Andrej Karpathy",
+    "score": 44,
+    "grade": "Drawn",
+    "dimensions": {
+      "ship": 1.5,
+      "architecture": 4.8,
+      "judgment": 4.6,
+      "transmission": 6.9
+    },
+    "repos": 3,
+    "focus": 0.396,
+    "consistency": 0.325,
+    "best": 47,
+    "median": 41
+  }
+]
