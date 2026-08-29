@@ -103,7 +103,7 @@ will not pretend otherwise.
 
 | Dimension | Source | Why |
 |---|---|---|
-| **Ship** | measured | tests, CI, release tags, tenure, project shape |
+| **Rigour** | measured | tests, CI, release tags, tenure, project shape |
 | **Architecture** | measured | function length + nesting distributions, substrate breadth, typing (`: any` doesn't count) |
 | **Judgment** | measured | revisit ratio, exception precision, cadence |
 | **Transmission** | measured | doc ratio, docstring coverage, contributors |

@@ -10,7 +10,7 @@ from aurarank.portfolio import aggregate, CORE_COVERAGE
 
 def repo(name, score, weight=10.0, dims=None):
     return {"name": name, "name_hash": name, "score": score, "grade": "x",
-            "dimensions": dims or {"ship": score / 10, "architecture": score / 10,
+            "dimensions": dims or {"rigour": score / 10, "architecture": score / 10,
                                    "judgment": score / 10, "transmission": score / 10},
             "share": 1.0, "mass": weight, "weight": weight,
             "languages": ["python"], "active_months": 6, "tenure_days": 200}
@@ -54,8 +54,8 @@ def test_bigger_longer_repos_carry_more_weight():
 def test_dimension_missing_from_some_repos_is_not_counted_as_zero():
     # A repo with no parseable code has no architecture score. Averaging it in
     # as zero would be the same fallback bug this project keeps finding.
-    rs = [repo("a", 60, dims={"ship": 6.0, "judgment": 6.0, "transmission": 6.0}),
-          repo("b", 60, dims={"ship": 6.0, "architecture": 8.0,
+    rs = [repo("a", 60, dims={"rigour": 6.0, "judgment": 6.0, "transmission": 6.0}),
+          repo("b", 60, dims={"rigour": 6.0, "architecture": 8.0,
                               "judgment": 6.0, "transmission": 6.0})]
     out = aggregate(rs, MONTHS)
     assert out["dimensions"]["architecture"] == 8.0

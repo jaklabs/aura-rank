@@ -185,7 +185,7 @@ def aggregate(repos: list[dict], months_union: set[str]) -> dict:
         sum(r[key] * r["weight"] for r in core) / core_w, 1)
 
     dims: dict[str, float] = {}
-    for name in ("ship", "architecture", "judgment", "transmission"):
+    for name in ("rigour", "architecture", "judgment", "transmission"):
         present = [r for r in core if name in r["dimensions"]]
         if present:
             w = sum(r["weight"] for r in present) or 1.0
@@ -302,7 +302,7 @@ def _c(p: dict) -> float:
 
 
 def _r(p: dict) -> float:
-    return p["dimensions"].get("ship", 0)
+    return p["dimensions"].get("rigour", 0)
 
 
 def main() -> None:

@@ -23,7 +23,7 @@ Calibration earned its keep before it produced a single band.
 | Bug | Symptom | Cause |
 |---|---|---|
 | `.github` excluded from the walk | `has_ci` false for **all 36** repos, Flask included | the skip rule was `d.startswith(".git")`, which also matches `.github` |
-| `ship` degenerate | p25 = median = p75 = **6.5**, an identical score for half the corpus | every component saturated: tests, CI, tenure all maxed, IaC and migrations absent for libraries |
+| `rigour` degenerate | p25 = median = p75 = **6.5**, an identical score for half the corpus | every component saturated: tests, CI, tenure all maxed, IaC and migrations absent for libraries |
 | `transmission` degenerate | 10.0 for 34 of 36 repos | three boolean-ish inputs that all mature OSS passes |
 
 A fourth was fixed pre-emptively during the run: a repo with no Python was having its

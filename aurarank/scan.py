@@ -40,7 +40,7 @@ from pathlib import Path
 
 from . import langs
 
-SPEC_VERSION = "0.7.0"
+SPEC_VERSION = "0.8.0"
 
 
 def stable_hash(text: str) -> str:
@@ -512,7 +512,12 @@ def score(g: dict, t: dict, p: dict) -> dict:
     # Bands widened after the first calibration run: the originals saturated,
     # so half the corpus landed on an identical score. Ranges below are set from
     # the observed distribution over 36 public repos (see tools/calibration.json).
-    ship = 10 * _weighted([
+    # Named `rigour`, not `ship`. It measures the scaffolding AROUND shipping --
+    # tests, CI, releases, tenure -- not whether you ship. Calling it "ship" made
+    # the tool report 1.7 for people running four production systems, which reads
+    # as a broken instrument rather than a real finding. A dimension whose name
+    # misdescribes its contents is a defect on a tool asking to be trusted.
+    rigour = 10 * _weighted([
         (0.28, _band(t["test_ratio"], 0, 1.0)),
         (0.22, 1.0 if t["has_ci"] else 0.0),
         (0.20, _band(g.get("tags", 0), 0, 12)),
@@ -543,7 +548,7 @@ def score(g: dict, t: dict, p: dict) -> dict:
         (0.15, 1.0 if t["has_docs"] else 0.0),
     ])
 
-    dims: dict[str, float] = {"ship": round(ship, 1)}
+    dims: dict[str, float] = {"rigour": round(rigour, 1)}
     if arch is not None:
         dims["architecture"] = round(arch, 1)
     dims["judgment"] = round(judgment, 1)

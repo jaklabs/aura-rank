@@ -1,10 +1,26 @@
 [
   {
+    "name": "Hynek Schlawack",
+    "score": 86,
+    "grade": "Sovereign",
+    "dimensions": {
+      "rigour": 10.0,
+      "architecture": 5.8,
+      "judgment": 9.2,
+      "transmission": 9.2
+    },
+    "repos": 2,
+    "focus": 0.501,
+    "consistency": 0.981,
+    "best": 90,
+    "median": 85
+  },
+  {
     "name": "David Lord",
     "score": 85,
     "grade": "Sovereign",
     "dimensions": {
-      "ship": 9.9,
+      "rigour": 9.9,
       "architecture": 7.3,
       "judgment": 7.9,
       "transmission": 8.8
@@ -16,43 +32,75 @@
     "median": 83
   },
   {
-    "name": "Rich Harris",
-    "score": 84,
+    "name": "Matteo Collina",
+    "score": 83,
     "grade": "Sovereign",
     "dimensions": {
-      "ship": 10.0,
-      "architecture": 6.0,
-      "judgment": 8.9,
-      "transmission": 8.8
+      "rigour": 10.0,
+      "architecture": 8.2,
+      "judgment": 8.0,
+      "transmission": 7.1
     },
     "repos": 1,
     "focus": 1.0,
     "consistency": 1.0,
-    "best": 84,
-    "median": 84
+    "best": 83,
+    "median": 83
   },
   {
-    "name": "Sindre Sorhus",
-    "score": 80,
-    "grade": "Sealed",
+    "name": "Feross Aboukhadijeh",
+    "score": 83,
+    "grade": "Sovereign",
     "dimensions": {
-      "ship": 10.0,
-      "architecture": 7.4,
-      "judgment": 8.3,
-      "transmission": 6.3
+      "rigour": 10.0,
+      "architecture": 8.5,
+      "judgment": 7.8,
+      "transmission": 7.0
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.803,
+    "best": 83,
+    "median": 83
+  },
+  {
+    "name": "Sebastian Ramirez",
+    "score": 82,
+    "grade": "Sovereign",
+    "dimensions": {
+      "rigour": 9.9,
+      "architecture": 8.0,
+      "judgment": 7.7,
+      "transmission": 7.1
     },
     "repos": 4,
-    "focus": 0.262,
-    "consistency": 0.967,
-    "best": 81,
-    "median": 78
+    "focus": 0.268,
+    "consistency": 1.0,
+    "best": 86,
+    "median": 76
+  },
+  {
+    "name": "Will McGugan",
+    "score": 82,
+    "grade": "Sovereign",
+    "dimensions": {
+      "rigour": 8.8,
+      "architecture": 7.0,
+      "judgment": 8.0,
+      "transmission": 9.2
+    },
+    "repos": 2,
+    "focus": 0.5,
+    "consistency": 1.0,
+    "best": 86,
+    "median": 82
   },
   {
     "name": "Tom Christie",
     "score": 80,
     "grade": "Sealed",
     "dimensions": {
-      "ship": 9.6,
+      "rigour": 9.6,
       "architecture": 7.1,
       "judgment": 7.4,
       "transmission": 7.8
@@ -64,11 +112,27 @@
     "median": 79
   },
   {
+    "name": "Sindre Sorhus",
+    "score": 80,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 10.0,
+      "architecture": 7.4,
+      "judgment": 8.3,
+      "transmission": 6.3
+    },
+    "repos": 4,
+    "focus": 0.262,
+    "consistency": 0.967,
+    "best": 81,
+    "median": 78
+  },
+  {
     "name": "Simon Willison",
     "score": 79,
     "grade": "Sealed",
     "dimensions": {
-      "ship": 9.8,
+      "rigour": 9.8,
       "architecture": 5.0,
       "judgment": 8.7,
       "transmission": 8.1
@@ -80,11 +144,139 @@
     "median": 77
   },
   {
+    "name": "Ned Batchelder",
+    "score": 79,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 10.0,
+      "architecture": 4.5,
+      "judgment": 7.7,
+      "transmission": 9.3
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.986,
+    "best": 79,
+    "median": 79
+  },
+  {
+    "name": "Rich Harris",
+    "score": 78,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 10.0,
+      "architecture": 6.0,
+      "judgment": 6.3,
+      "transmission": 8.8
+    },
+    "repos": 2,
+    "focus": 0.547,
+    "consistency": 1.0,
+    "best": 78,
+    "median": 78
+  },
+  {
+    "name": "TJ Holowaychuk",
+    "score": 78,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 10.0,
+      "architecture": 7.9,
+      "judgment": 8.5,
+      "transmission": 4.9
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.899,
+    "best": 78,
+    "median": 78
+  },
+  {
+    "name": "Guillermo Rauch",
+    "score": 75,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 8.4,
+      "architecture": 8.2,
+      "judgment": 6.2,
+      "transmission": 7.2
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.919,
+    "best": 75,
+    "median": 75
+  },
+  {
+    "name": "Armin Ronacher",
+    "score": 74,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 8.3,
+      "architecture": 6.6,
+      "judgment": 7.1,
+      "transmission": 7.7
+    },
+    "repos": 2,
+    "focus": 0.545,
+    "consistency": 0.859,
+    "best": 75,
+    "median": 74
+  },
+  {
+    "name": "Kent C. Dodds",
+    "score": 73,
+    "grade": "Sealed",
+    "dimensions": {
+      "rigour": 8.1,
+      "architecture": 7.7,
+      "judgment": 6.4,
+      "transmission": 7.0
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.39,
+    "best": 73,
+    "median": 73
+  },
+  {
+    "name": "Colin McDonnell",
+    "score": 72,
+    "grade": "Marked",
+    "dimensions": {
+      "rigour": 9.1,
+      "architecture": 7.4,
+      "judgment": 7.3,
+      "transmission": 4.9
+    },
+    "repos": 1,
+    "focus": 1.0,
+    "consistency": 0.987,
+    "best": 72,
+    "median": 72
+  },
+  {
+    "name": "Luke Edwards",
+    "score": 70,
+    "grade": "Marked",
+    "dimensions": {
+      "rigour": 8.4,
+      "architecture": 8.2,
+      "judgment": 5.0,
+      "transmission": 6.6
+    },
+    "repos": 3,
+    "focus": 0.388,
+    "consistency": 0.626,
+    "best": 70,
+    "median": 70
+  },
+  {
     "name": "Mitchell Hashimoto",
     "score": 68,
     "grade": "Marked",
     "dimensions": {
-      "ship": 4.7,
+      "rigour": 4.7,
       "architecture": 7.7,
       "judgment": 10.0,
       "transmission": 4.9
@@ -96,11 +288,27 @@
     "median": 68
   },
   {
+    "name": "Anthony Sottile",
+    "score": 67,
+    "grade": "Marked",
+    "dimensions": {
+      "rigour": 9.9,
+      "architecture": 6.1,
+      "judgment": 7.2,
+      "transmission": 3.7
+    },
+    "repos": 2,
+    "focus": 0.514,
+    "consistency": 0.868,
+    "best": 67,
+    "median": 67
+  },
+  {
     "name": "Fabrice Bellard",
     "score": 59,
     "grade": "Formed",
     "dimensions": {
-      "ship": 4.9,
+      "rigour": 4.9,
       "architecture": 7.1,
       "judgment": 7.8,
       "transmission": 3.8
@@ -116,7 +324,7 @@
     "score": 44,
     "grade": "Drawn",
     "dimensions": {
-      "ship": 1.5,
+      "rigour": 1.5,
       "architecture": 4.8,
       "judgment": 4.6,
       "transmission": 6.9
