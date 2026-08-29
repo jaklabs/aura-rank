@@ -1,6 +1,6 @@
 # Calibration — how the bands were set, and what's still wrong with them
 
-Spec `v0.7.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
+Spec `v0.9.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
 
 ## Why the first attempt was thrown away
 
@@ -167,3 +167,48 @@ Unresolved, and stated rather than hidden.
 
 Until then: **the per-dimension breakdown is the useful output, and the single number is
 provisional.** Said here rather than discovered by a user.
+
+## Round three — fitting the middle to a real population (v0.9.0)
+
+The bands were previously anchored on meaning and validated against 52 hand-picked
+libraries. That could only ever anchor the ceiling; the middle of the scale was
+reasoned, not fitted, because flagship open source is not what most software is.
+
+`tools/discover.py` samples public repositories at random across the whole
+popularity range, scores them and stores no identity. That gave the project its
+first thing resembling a population, and `tools/recalibrate.py` fits the middle
+to it while the elite corpus continues to anchor the top.
+
+### The sampler was biased, and the first refit was wrong
+
+The first pass queried `pushed:>2024-01-01`, which silently excluded every
+abandoned repository. The "ordinary" population it measured was really *ordinary
+and still maintained*, median **55**. Bands fitted to that were too harsh — wrong
+in the same direction as the elite corpus, just less visibly.
+
+Sampling the abandoned tail (`pushed:<2021-01-01`) returned scores of 18, 24, 27,
+30, 32, 36, 37, 38, 38, 39, 43, 49, 50 and 60 — a median near **37**. Adding them
+moved the population median from 55 to **48**, and the bands with it.
+
+That is the sixth instance in this project of a filter or fallback quietly
+changing what a measurement means. The others: a git timeout scored as zero
+maintenance, absent AST data defaulting Architecture, plain `.js` scored 0% typed,
+`.github` excluded from the walk, and a `head -1` pipeline killing a script
+mid-run.
+
+### Bands as of v0.9.0
+
+| Band | Range | Anonymous % | Elite % |
+|---|---|---:|---:|
+| Dormant | 0–26 | 6% | 2% |
+| Kindled | 27–36 | 17% | 0% |
+| Drawn | 37–43 | 22% | 0% |
+| Formed | 44–54 | 19% | 2% |
+| Marked | 55–63 | 24% | 10% |
+| Sealed | 64–77 | 11% | 35% |
+| Sovereign | 78–84 | 2% | 42% |
+| Apex | 85–100 | 0% | 10% |
+
+**Still provisional.** n=54 anonymous repositories is enough to correct an obvious
+bias and not enough to settle a scale. Apex remains unoccupied by either corpus.
+Re-run `tools/discover.py` and `tools/recalibrate.py` as the sample grows.

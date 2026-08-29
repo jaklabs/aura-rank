@@ -609,14 +609,14 @@ def score(g: dict, t: dict, p: dict, tq: dict | None = None) -> dict:
 # almost every genuine user in the bottom band, which is both useless and wrong.
 # See tools/CALIBRATION.md for the method, the samples and the known bias.
 TIERS = [
-    (0,  33,  "Dormant",   "little engineering signal yet -- a scratch or scratch-shaped repo"),
-    (34, 42,  "Kindled",   "working code, shipped, but no test or CI discipline behind it"),
-    (43, 52,  "Drawn",     "discipline appearing -- some tests, some structure, held together"),
-    (53, 58,  "Formed",    "real practice: tested, documented, maintained over time"),
-    (59, 65,  "Marked",    "professional open-source standard -- others could rely on this"),
-    (66, 77,  "Sealed",    "a strong, well-maintained library others do rely on"),
-    (78, 84,  "Sovereign", "flagship quality -- among the best-run projects in its language"),
-    (85, 100, "Apex",      "best-in-class. Reference-grade engineering"),
+    (0, 26, "Dormant", "little engineering signal yet -- a scratch or scratch-shaped repo"),
+    (27, 36, "Kindled", "working code, shipped, but no test or CI discipline behind it"),
+    (37, 43, "Drawn", "discipline appearing -- some tests, some structure, held together"),
+    (44, 54, "Formed", "real practice: tested, documented, maintained over time"),
+    (55, 63, "Marked", "professional open-source standard -- others could rely on this"),
+    (64, 77, "Sealed", "a strong, well-maintained library others do rely on"),
+    (78, 84, "Sovereign", "flagship quality -- among the best-run projects in its language"),
+    (85, 100, "Apex", "best-in-class. Reference-grade engineering"),
 ]
 
 
