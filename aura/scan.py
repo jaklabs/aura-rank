@@ -36,7 +36,7 @@ from pathlib import Path
 
 from . import langs
 
-SPEC_VERSION = "0.6.0"
+SPEC_VERSION = "0.7.0"
 
 
 def stable_hash(text: str) -> str:
@@ -193,28 +193,149 @@ def _revisit_ratio(repo: Path) -> float | None:
     return round(multi / len(touched), 3)
 
 
-def author_share(repo: Path, emails: set[str]) -> float | None:
-    """What fraction of this repository's commits are yours.
+# Coding agents write code under a person's direction. Their commits belong to
+# whoever directed them, so they are attributed to the repository's dominant human.
+AGENT_IDENTITIES = ("noreply@anthropic.com", "claude", "copilot", "cursor",
+                    "aider", "devin", "codex", "openai.com", "windsurf")
 
-    A repo you contributed three commits to is not your work, and a vendored
-    clone is not your work at all. Aggregation weights by this so a portfolio
-    reflects what someone actually built.
+# Automation that nobody directs. A dependency bump is not anyone's craft, so
+# these are dropped from the numerator AND the denominator -- counting them would
+# dilute every human in the repository.
+BOT_IDENTITIES = ("dependabot", "renovate", "greenkeeper", "github-actions",
+                  "semantic-release", "allcontributors", "snyk-bot", "imgbot",
+                  "pre-commit-ci", "netlify", "vercel[bot]")
 
-    Emails are compared as hashes; no address is stored or emitted.
+# GitHub's own committer identity on web-UI and bot commits. Not a person -- but
+# note `12345+user@users.noreply.github.com` IS a person using a privacy address,
+# and is deliberately not matched here.
+MACHINE_IDENTITIES = ("noreply@github.com",)
+
+# A local-part that is literally "agent", "bot" or "ci" is a service account
+# whatever domain it sits on.
+MACHINE_LOCALPARTS = {"agent", "bot", "ci", "build", "builder", "automation"}
+
+_COAUTHOR = re.compile(r"<([^>]+)>")
+
+
+def _classify(email: str) -> str:
+    e = email.lower()
+    if any(b in e for b in BOT_IDENTITIES) or e in MACHINE_IDENTITIES:
+        return "bot"
+    if any(a in e for a in AGENT_IDENTITIES):
+        return "agent"
+    if e.split("@", 1)[0] in MACHINE_LOCALPARTS:
+        return "agent"
+    return "human"
+
+
+def attribute_commit(ids: set[str], wanted: set[str], dominant: bool) -> str:
+    """Who owns one commit. Pure, so the rule can be tested directly.
+
+    `mine`  -- your identity is on it (author, committer or co-author), OR a coding
+               agent authored it and you are the dominant human in the repository.
+               Agent commits are directed work; the person who directed them owns
+               the result.
+    `bot`   -- pure automation. Excluded from the total rather than counted against
+               anyone: a dependency bump is nobody's craft.
+    `other` -- somebody else's work.
     """
-    log = _git(repo, "log", "--all", "--pretty=format:%aE")
-    if not log:
+    if ids & wanted:
+        return "mine"
+    kinds = {_classify(e) for e in ids}
+    if kinds == {"bot"}:
+        return "bot"
+    if "agent" in kinds and "human" not in kinds:
+        return "mine" if dominant else "agent_other"
+    return "other"
+
+
+def commit_identities(repo: Path) -> list[dict] | None:
+    """One record per commit: author, committer and any Co-Authored-By trailers.
+
+    All three matter. A commit you authored and an agent committed is yours; so is
+    one an agent authored and you committed; so is one where you are named in a
+    co-author trailer. Attribution should follow anyone whose name is on the work.
+    """
+    fmt = "%aE%x00%cE%x00%(trailers:key=Co-authored-by,valueonly,separator=%x1f)%x01"
+    raw = _git(repo, "log", "--all", f"--pretty=format:{fmt}")
+    if raw is None:                       # old git, no trailer support
+        raw = _git(repo, "log", "--all", "--pretty=format:%aE%x00%cE%x00%x01")
+    if not raw:
         return None
-    wanted = {stable_hash(e.strip().lower()) for e in emails}
-    total = mine = 0
-    for line in log.splitlines():
-        line = line.strip().lower()
-        if not line:
+    out = []
+    for rec in raw.split("\x01"):
+        rec = rec.strip("\n")
+        if not rec.strip():
             continue
+        parts = rec.split("\x00")
+        if len(parts) < 2:
+            continue
+        ids = {parts[0].strip().lower(), parts[1].strip().lower()}
+        if len(parts) > 2 and parts[2].strip():
+            for chunk in parts[2].split("\x1f"):
+                m = _COAUTHOR.search(chunk)
+                if m:
+                    ids.add(m.group(1).strip().lower())
+        out.append({e for e in ids if e})
+    return out
+
+
+def attribution(repo: Path, emails: set[str]) -> dict | None:
+    """How much of this repository is the caller's work.
+
+    A commit is theirs when any identity on it is theirs, or when a coding agent
+    authored it and they are the dominant human in the repo -- an agent commit is
+    directed work, and the person who directed it owns it.
+
+    Pure automation (dependency bots, release bots) is excluded from the total
+    rather than counted against anyone.
+    """
+    commits = commit_identities(repo)
+    if commits is None:
+        return None
+
+    wanted = {e.strip().lower() for e in emails}
+    human_counts: Counter[str] = Counter()
+    for ids in commits:
+        for e in ids:
+            if _classify(e) == "human":
+                human_counts[e] += 1
+    dominant = (not human_counts) or (
+        sum(human_counts[e] for e in wanted if e in human_counts)
+        >= max(human_counts.values(), default=0))
+
+    mine = agent = bot = total = 0
+    unclaimed: Counter[str] = Counter()
+    for ids in commits:
+        verdict = attribute_commit(ids, wanted, dominant)
+        if verdict == "bot":
+            bot += 1
+            continue                       # excluded from the denominator entirely
         total += 1
-        if stable_hash(line) in wanted:
+        if verdict == "mine":
             mine += 1
-    return round(mine / total, 3) if total else None
+            if not (ids & wanted):
+                agent += 1                 # directed, not typed by hand
+        elif verdict == "agent_other":
+            agent += 0
+        else:
+            for e in ids:
+                if _classify(e) == "human":
+                    unclaimed[e] += 1
+
+    return {
+        "share": round(mine / total, 3) if total else None,
+        "commits": total,
+        "mine": mine,
+        "agent_directed": agent if dominant else 0,
+        "bots_excluded": bot,
+        "unclaimed": dict(unclaimed.most_common(5)),
+    }
+
+
+def author_share(repo: Path, emails: set[str]) -> float | None:
+    a = attribution(repo, emails)
+    return a["share"] if a else None
 
 
 # --------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.6.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.7.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+

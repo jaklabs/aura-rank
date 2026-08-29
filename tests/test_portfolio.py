@@ -75,6 +75,57 @@ def test_spread_reports_best_minus_median():
     assert s["best"] == 80 and s["median"] == 40 and s["spread"] == 40
 
 
+# --- attribution rules -------------------------------------------------------
+from aura.scan import attribute_commit, _classify
+
+ME = {"me@example.com"}
+
+
+def test_my_commit_is_mine():
+    assert attribute_commit({"me@example.com"}, ME, True) == "mine"
+
+
+def test_agent_authored_commit_is_mine_when_i_direct_the_repo():
+    # The decision Jak made explicitly: agent commits under his direction are his.
+    assert attribute_commit({"noreply@anthropic.com"}, ME, True) == "mine"
+
+
+def test_agent_commit_is_not_mine_in_someone_elses_repo():
+    assert attribute_commit({"noreply@anthropic.com"}, ME, False) != "mine"
+
+
+def test_commit_i_committed_but_an_agent_authored_is_mine():
+    assert attribute_commit(
+        {"noreply@anthropic.com", "me@example.com"}, ME, False) == "mine"
+
+
+def test_co_author_trailer_counts():
+    assert attribute_commit(
+        {"someone@else.com", "me@example.com"}, ME, False) == "mine"
+
+
+def test_dependency_bots_are_excluded_not_blamed():
+    # Excluded from the denominator entirely -- counting a dependabot commit
+    # would dilute every human in the repo.
+    assert attribute_commit(
+        {"49699333+dependabot[bot]@users.noreply.github.com",
+         "noreply@github.com"}, ME, True) == "bot"
+
+
+def test_a_real_collaborator_is_not_mine():
+    assert attribute_commit({"colleague@example.com"}, ME, True) == "other"
+
+
+def test_github_privacy_addresses_are_humans_not_bots():
+    # 12345+user@users.noreply.github.com is a person; noreply@github.com is not.
+    assert _classify("12345+realperson@users.noreply.github.com") == "human"
+    assert _classify("noreply@github.com") == "bot"
+
+
+def test_service_localparts_are_machines_on_any_domain():
+    assert _classify("agent@rork.com") == "agent"
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
@@ -85,3 +136,5 @@ if __name__ == "__main__":
                 fails += 1; print(f"  FAIL  {name}: {e}")
     print(f"\n{'all passed' if not fails else str(fails) + ' FAILED'}")
     sys.exit(1 if fails else 0)
+
+

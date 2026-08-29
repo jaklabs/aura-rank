@@ -31,11 +31,12 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
+from collections import Counter
 from datetime import datetime, timezone
 from math import log1p
 from pathlib import Path
 
-from .scan import TIERS, _git, author_share, scan, stable_hash, tier_of
+from .scan import TIERS, _git, attribution, scan, stable_hash, tier_of
 
 # Fraction of total evidence-weight that defines the "core body of work".
 # 0.60 keeps the projects carrying most of your output and drops the long tail of
@@ -94,6 +95,7 @@ def build(paths: list[Path], emails: set[str], min_share: float = 0.25) -> dict:
     repos = []
     months_union: set[str] = set()
     skipped: list[tuple[str, str]] = []
+    unclaimed: Counter[str] = Counter()
 
     for p in paths:
         if not (p / ".git").exists():
@@ -108,9 +110,11 @@ def build(paths: list[Path], emails: set[str], min_share: float = 0.25) -> dict:
             skipped.append((p.name, "too little source"))
             continue
 
-        share = author_share(p, emails) if emails else 1.0
-        if share is None:
-            share = 1.0
+        attr = attribution(p, emails) if emails else None
+        share = 1.0 if attr is None or attr["share"] is None else attr["share"]
+        if attr:
+            for e, n in attr["unclaimed"].items():
+                unclaimed[e] += n
         if share < min_share:
             skipped.append((p.name, f"only {share:.0%} yours"))
             continue
@@ -128,6 +132,8 @@ def build(paths: list[Path], emails: set[str], min_share: float = 0.25) -> dict:
             "languages": list(res["tree"]["languages"]),
             "active_months": res["git"].get("active_months", 0),
             "tenure_days": res["git"].get("tenure_days", 0),
+            "agent_directed": attr["agent_directed"] if attr else 0,
+            "bots_excluded": attr["bots_excluded"] if attr else 0,
         })
         months_union |= active_months(p)
 
@@ -136,6 +142,11 @@ def build(paths: list[Path], emails: set[str], min_share: float = 0.25) -> dict:
 
     out = aggregate(repos, months_union)
     out["skipped"] = skipped
+    # Never silently merge two addresses into one person -- surface them and let
+    # the user claim them. Guessing that jak@ and jak.dev@ are the same human is
+    # exactly the kind of inference a ranking tool should not make on its own.
+    out["unclaimed_identities"] = dict(unclaimed.most_common(6))
+    out["agent_directed_total"] = sum(r["agent_directed"] for r in repos)
     return out
 
 
@@ -241,6 +252,14 @@ def render(p: dict) -> str:
         mark = "*" if r["name"] in core_names else " "
         L.append(f"  {mark} {r['score']:>3}  {r['name'][:30]:<30} "
                  f"{r['grade']:<10} {r['share']:>4.0%} yours")
+    if p.get("agent_directed_total"):
+        L.append(f"\n  {p['agent_directed_total']} agent-authored commits counted as "
+                 f"yours (directed work)")
+    if p.get("unclaimed_identities"):
+        L.append("\n  unclaimed identities in your repos"
+                 " — add with --me if these are you")
+        for e, n in p["unclaimed_identities"].items():
+            L.append(f"    {n:>5} commits  {e}")
     if p["skipped"]:
         L.append("\n  skipped")
         for n, why in p["skipped"][:8]:
