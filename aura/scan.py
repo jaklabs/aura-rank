@@ -23,7 +23,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 import os
 import re
@@ -34,7 +33,9 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-SPEC_VERSION = "0.3.0"
+from . import langs
+
+SPEC_VERSION = "0.5.0"
 
 # Directories that are never signal, only noise.
 SKIP_DIRS = {
@@ -68,21 +69,29 @@ DEP_FILES = ["requirements.txt", "pyproject.toml", "package.json", "go.mod",
 # git — metadata only. Dates and counts. Never message bodies, never diffs.
 # --------------------------------------------------------------------------
 
-def _git(repo: Path, *args: str) -> str:
+def _git(repo: Path, *args: str, timeout: int = 60) -> str | None:
+    """Returns None when git fails or times out -- NOT an empty string.
+
+    This distinction is load-bearing. The previous version swallowed a timeout
+    and returned "", which the callers read as "no history", which silently
+    produced revisit_ratio 0.0 for any repository whose log was too big to walk
+    in time. A large, well-maintained repo was being scored as abandoned.
+    A failed measurement must never be indistinguishable from a bad result.
+    """
     try:
         out = subprocess.run(
             ["git", "-C", str(repo), *args],
-            capture_output=True, text=True, timeout=60, check=False,
+            capture_output=True, text=True, timeout=timeout, check=False,
         )
-        return out.stdout if out.returncode == 0 else ""
+        return out.stdout if out.returncode == 0 else None
     except (OSError, subprocess.SubprocessError):
-        return ""
+        return None
 
 
 def git_signals(repo: Path) -> dict:
     """Cadence and maintenance, derived purely from commit metadata."""
     log = _git(repo, "log", "--all", "--pretty=format:%at|%aE|%cI")
-    if not log.strip():
+    if not log or not log.strip():
         return {"is_git_repo": False}
 
     times: list[int] = []
@@ -139,8 +148,18 @@ def git_signals(repo: Path) -> dict:
     }
 
 
-def _revisit_ratio(repo: Path) -> float:
-    raw = _git(repo, "log", "--all", "--name-only", "--pretty=format:@%at")
+# Recent history only. Two reasons, and the second matters more than the first:
+# walking fifteen years of file lists took ~55s on a big repo, AND over that long
+# a window every surviving file eventually gets touched twice, so the ratio drifts
+# toward 1.0 and stops discriminating. A recent window is both faster and sharper.
+REVISIT_WINDOW = "3.years"
+
+
+def _revisit_ratio(repo: Path) -> float | None:
+    raw = _git(repo, "log", "--all", f"--since={REVISIT_WINDOW}",
+               "--name-only", "--pretty=format:@%at", timeout=45)
+    if raw is None:
+        return None                      # unmeasured -- never scored as zero
     if not raw.strip():
         return 0.0
     touched: dict[str, set[str]] = defaultdict(set)
@@ -157,7 +176,7 @@ def _revisit_ratio(repo: Path) -> float:
             if not any(p in SKIP_DIRS for p in line.split("/")):
                 touched[line].add(month)
     if not touched:
-        return 0.0
+        return None
     multi = sum(1 for m in touched.values() if len(m) > 1)
     return round(multi / len(touched), 3)
 
@@ -167,8 +186,19 @@ def _revisit_ratio(repo: Path) -> float:
 # --------------------------------------------------------------------------
 
 def walk_sources(repo: Path):
+    """Walk the repo's own files.
+
+    Nested git repositories -- vendored checkouts, submodules, a corpus directory --
+    are somebody else's code and are skipped. Without this a repo that happens to
+    contain a clone scores on the clone's tests and typing, not its own.
+    """
     for root, dirs, files in os.walk(repo):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and d != ".git"]
+        dirs[:] = [
+            d for d in dirs
+            if d not in SKIP_DIRS
+            and d != ".git"
+            and not (Path(root) / d / ".git").exists()
+        ]
         for f in files:
             yield Path(root) / f
 
@@ -244,69 +274,38 @@ def tree_signals(repo: Path) -> tuple[dict, list[Path]]:
 # AST — parsed locally, only distributions emitted
 # --------------------------------------------------------------------------
 
-def _depth(node, d=0) -> int:
-    nesting = (ast.If, ast.For, ast.While, ast.With, ast.Try,
-               ast.AsyncFor, ast.AsyncWith)
-    best = d
-    for child in ast.iter_child_nodes(node):
-        best = max(best, _depth(child, d + isinstance(child, nesting)))
-    return best
-
-
-def python_signals(files: list[Path], cap: int = 400) -> dict:
-    lengths: list[int] = []
-    depths: list[int] = []
-    bare_except = broad_except = handled = 0
-    fns = typed = documented = 0
-    parsed = 0
-
-    for p in [f for f in files if f.suffix == ".py"][:cap]:
+def code_signals(files: list[Path], cap: int = 600) -> dict:
+    """Analyze every language we can, then MERGE -- a polyglot repo is measured
+    across all of its code rather than by whichever language happens to win a
+    file count. Languages with no analyzer are simply absent from the merge."""
+    accs = []
+    skipped = 0
+    langs_seen: set[str] = set()
+    for f in files[:cap]:
+        ext = f.suffix.lower()
         try:
-            tree = ast.parse(p.read_text(errors="ignore"))
-        except (OSError, SyntaxError, ValueError):
+            src = f.read_text(errors="ignore")
+        except OSError:
             continue
-        parsed += 1
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                fns += 1
-                if node.end_lineno and node.lineno:
-                    lengths.append(node.end_lineno - node.lineno + 1)
-                depths.append(_depth(node))
-                args = node.args
-                every = list(args.args) + list(args.kwonlyargs)
-                if (node.returns is not None
-                        or (every and all(a.annotation for a in every))):
-                    typed += 1
-                if ast.get_docstring(node):
-                    documented += 1
-            elif isinstance(node, ast.ExceptHandler):
-                handled += 1
-                if node.type is None:
-                    bare_except += 1
-                elif isinstance(node.type, ast.Name) and node.type.id in (
-                        "Exception", "BaseException"):
-                    broad_except += 1
+        if langs.looks_generated(src):
+            skipped += 1
+            continue
+        if ext == ".py":
+            accs.append(langs.analyze_python(src)); langs_seen.add("python")
+        elif ext in (".js", ".jsx", ".mjs", ".cjs"):
+            accs.append(langs.analyze_js(src, typed_lang=False)); langs_seen.add("javascript")
+        elif ext in (".ts", ".tsx", ".mts", ".cts"):
+            accs.append(langs.analyze_js(src, typed_lang=True)); langs_seen.add("typescript")
 
-    if not parsed:
-        return {"parsed_files": 0}
+    if not accs:
+        return {"parsed_files": 0, "analyzed_languages": []}
 
-    pct = lambda xs, q: int(statistics.quantiles(xs, n=10)[q]) if len(xs) > 9 \
-        else (max(xs) if xs else 0)
-
-    return {
-        "parsed_files": parsed,
-        "functions": fns,
-        "fn_len_p50": int(statistics.median(lengths)) if lengths else 0,
-        "fn_len_p90": pct(lengths, 8),
-        "nesting_p90": pct(depths, 8),
-        "type_coverage": round(typed / fns, 3) if fns else 0.0,
-        "docstring_coverage": round(documented / fns, 3) if fns else 0.0,
-        "except_handlers": handled,
-        "bare_except": bare_except,
-        "broad_except": broad_except,
-        "except_precision": round(
-            1 - (bare_except + broad_except) / handled, 3) if handled else None,
-    }
+    out = langs.summarize(langs.merge(*accs))
+    out["analyzed_languages"] = sorted(langs_seen)
+    out["skipped_generated"] = skipped
+    if langs_seen & {"javascript", "typescript"}:
+        out["js_scanner_limits"] = langs.JS_LIMITATIONS
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -365,11 +364,13 @@ def score(g: dict, t: dict, p: dict) -> dict:
         (0.35, (1 - _band(p["fn_len_p90"], 20, 90)) if has_ast else None),
         (0.25, (1 - _band(p["nesting_p90"], 1, 5)) if has_ast else None),
         (0.15, _band(t["substrate_breadth"], 1, 5)),
-        (0.25, _band(p["type_coverage"], 0, 0.9) if has_ast else None),
+        (0.25, _band(p["type_coverage"], 0, 0.9)
+               if (has_ast and p.get("type_coverage") is not None) else None),
     ]) if has_ast else None
 
     judgment = 10 * _weighted([
-        (0.45, _band(g.get("revisit_ratio", 0), 0.05, 0.75)),
+        (0.45, _band(g["revisit_ratio"], 0.05, 0.75)
+               if g.get("revisit_ratio") is not None else None),
         (0.30, p.get("except_precision") if has_ast else None),
         (0.25, _band(g.get("cadence", 0), 0.15, 0.95)),
     ])
@@ -429,7 +430,7 @@ def scan(path: str) -> dict:
 
     g = git_signals(repo)
     t, src = tree_signals(repo)
-    p = python_signals(src)
+    p = code_signals(src)
     s = score(g, t, p)
 
     return {
@@ -439,7 +440,7 @@ def scan(path: str) -> dict:
         "repo_name_hash": str(hash(repo.name) % (10**9)),   # not the name itself
         "git": g,
         "tree": t,
-        "python": p,
+        "code": p,
         **s,
         "grade": tier_of(s["measured_score"])[0],
         "grade_means": tier_of(s["measured_score"])[1],
@@ -466,10 +467,10 @@ def render(r: dict) -> str:
         "+" + "-" * w + "+",
         f"|  tenure {r['git'].get('tenure_days', 0)}d · "
         f"cadence {r['git'].get('cadence', 0)} · "
-        f"revisit {r['git'].get('revisit_ratio', 0)}".ljust(w) + " |",
+        f"revisit {r['git'].get('revisit_ratio')}".ljust(w) + " |",
         f"|  tests {r['tree']['test_ratio']} · "
-        f"types {r['python'].get('type_coverage', 0)} · "
-        f"bare-except {r['python'].get('bare_except', 0)}".ljust(w) + " |",
+        f"types {r['code'].get('type_coverage') or 0} · "
+        f"loose-handlers {r['code'].get('imprecise_handlers', 0)}".ljust(w) + " |",
         "+" + "-" * w + "+",
         "   Nothing left this machine. Run with --print to read the payload.",
     ]

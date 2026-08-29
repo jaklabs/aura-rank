@@ -1,6 +1,6 @@
 # Calibration — how the bands were set, and what's still wrong with them
 
-Spec `v0.3.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
+Spec `v0.5.0`. Run `python3 tools/calibrate.py --clone` to reproduce everything here.
 
 ## Why the first attempt was thrown away
 
@@ -83,20 +83,83 @@ Named anchors: `pallets/flask` **90** (Apex) · `simonw/datasette` **83** · `ps
    of the scale credibly and says nothing reliable about the middle.
 2. **The low anchor is worse.** Nine private repositories from a single developer. It is
    directionally right and statistically nothing.
-3. **Python only.** The AST analyzer parses Python. Other-language repos have Architecture
-   marked unmeasured, which is honest but leaves them scored on three dimensions instead of
-   four.
+3. **Three languages, and JS/TS is heuristic.** Python uses a real AST. JavaScript and
+   TypeScript use a hand-written lexical scanner, because a real parser would mean a
+   dependency and the zero-dependency property is what makes the tool auditable. Its
+   limits ship in the payload as `js_scanner_limits`. Every other language has
+   Architecture marked unmeasured.
 4. **`has_ci` is 97% true in the corpus.** It no longer discriminates *within* open source.
    It is kept because it discriminates sharply against typical private work, which is the
    population that will actually run this.
 5. **Repos are not developers.** A score describes one repository. A developer is not their
    worst repo, and this tool does not yet aggregate across several.
 
+## Round two — adding JavaScript/TypeScript (v0.4.0 → v0.5.0)
+
+Extending the corpus to 54 repos exposed three more faults, two of them worse than
+anything in round one.
+
+| Bug | Symptom | Cause |
+|---|---|---|
+| **A git timeout was scored as a result** | `date-fns` reported `revisit_ratio` **0.0** across 3,124 commits — an actively maintained library reading as abandoned | `_git()` swallowed `TimeoutExpired` and returned `""`, which callers read as "no history". Its score was **56**; it is really **65** |
+| Catastrophic regex backtracking | some files took minutes | the method pattern used `(?:public\|private\|…\|\s)*`, whose `\s` branch could match newlines |
+| Quadratic brace matching | scan time scaled with the square of file size | `_match_brace` rescanned to end-of-file once per function |
+
+The first is the serious one, and it is the **third instance of the same class** this
+project has produced: *a failure silently substituted with a plausible-looking value.*
+Architecture defaulting from absent AST data, plain `.js` scored as 0% typed, and now a
+timeout scored as zero maintenance. `_git()` returns `None` on failure now, and every
+consumer drops the signal rather than zeroing it.
+
+### Performance
+
+A full scan of `prettier/prettier` went **>300s → 1.6s**, and five large repos
+**80.1s → 3.2s**. The fixes: one regex pass instead of a per-character state machine,
+a single O(n) brace scan replacing per-function rescans, token-driven iteration, and a
+bounded `--since=3.years` window on the revisit walk.
+
+That last one is not only a speed fix. Over fifteen years of history nearly every
+surviving file gets touched in more than one month, so the unbounded ratio drifts toward
+1.0 and stops discriminating. **The recent window is both faster and a sharper signal.**
+
+### Does the JS analyzer agree with the Python one?
+
+The question that decides whether cross-language scores are comparable at all:
+
+| Language mix | n | median |
+|---|---|---|
+| python | 29 | 78.0 |
+| javascript + typescript | 14 | 74.0 |
+| javascript + python | 7 | 82.0 |
+| javascript | 2 | 73.5 |
+
+**Within four points.** A hand-written lexical scanner landing that close to a real AST
+is the result that had to hold — if JS repos had come in twenty points low, the analyzer
+would be measuring the parser rather than the code.
+
+Occupancy over 52 scored repos (2 skipped as too small to say anything about):
+
+```
+  Kindled    15-29   #                          n=1
+  Formed     45-59   #####                      n=5
+  Marked     60-72   ###########                n=11
+  Sealed     73-81   ######################     n=22
+  Sovereign  82-88   #############              n=13
+  Apex       89-100                             n=0
+```
+
+Anchors: `scrapy` **88** · `flask` **87** · `fastapi` **86** · `requests` **84** ·
+`express` **78** · `axios` **76** · `zod` **72** · `react-window` **55**.
+
+**Apex is empty**, which is the one band this corpus cannot validate. Either it is
+correctly reserved for something rarer than n=52 can sample, or its floor is too high.
+Unresolved, and stated rather than hidden.
+
 ## What would make this real
 
 - A representative sample — a few thousand repos across the popularity distribution,
   including abandoned, small and application-shaped ones, not just libraries.
-- JS/TS and Go analyzers, so the corpus stops being Python-shaped.
+- Go and Rust analyzers, and a resolution for the empty Apex band.
 - Multi-repo aggregation, so the unit of measurement is a person rather than a directory.
 
 Until then: **the per-dimension breakdown is the useful output, and the single number is

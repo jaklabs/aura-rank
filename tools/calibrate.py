@@ -75,25 +75,25 @@ def score_all() -> list[dict]:
             continue
         if not r["git"].get("is_git_repo"):
             continue
-        # Python-majority only: the AST analyzer is Python-only, and scoring
-        # architecture off default values for a JS repo is noise, not signal.
-        langs = r["tree"]["languages"]
-        if r["python"].get("parsed_files", 0) < 5:
-            print(f"  skip {slug}: not python-majority ({list(langs)[:2]})")
+        # Needs enough analyzable source to say anything. Since v0.4.0 that
+        # includes JS/TS, so the corpus is no longer Python-shaped.
+        if r["code"].get("parsed_files", 0) < 5:
+            print(f"  skip {slug}: too little analyzable source")
             continue
         rows.append({
             "slug": slug, "corpus_tier": tier,
             "score": r["measured_score"], **r["dimensions"],
+            "langs": ",".join(r["code"].get("analyzed_languages", [])),
             "test_ratio": r["tree"]["test_ratio"],
             "has_ci": r["tree"]["has_ci"],
             "has_iac": r["tree"]["has_iac"],
             "revisit": r["git"]["revisit_ratio"],
             "cadence": r["git"]["cadence"],
             "tenure_days": r["git"]["tenure_days"],
-            "type_cov": r["python"].get("type_coverage", 0),
-            "fn_p90": r["python"].get("fn_len_p90", 0),
-            "nest_p90": r["python"].get("nesting_p90", 0),
-            "exc_prec": r["python"].get("except_precision"),
+            "type_cov": r["code"].get("type_coverage"),
+            "fn_p90": r["code"].get("fn_len_p90", 0),
+            "nest_p90": r["code"].get("nesting_p90", 0),
+            "exc_prec": r["code"].get("except_precision"),
         })
     return rows
 
@@ -109,7 +109,7 @@ def pct(xs: list[float], p: float) -> float:
 
 def report(rows: list[dict]) -> dict:
     scores = [r["score"] for r in rows]
-    print(f"\n{'='*72}\nCORPUS: {len(rows)} python-majority repos\n{'='*72}")
+    print(f"\n{'='*72}\nCORPUS: {len(rows)} repos\n{'='*72}")
     print(f"score      min {min(scores)}  p25 {pct(scores,.25):.0f}  "
           f"median {statistics.median(scores):.0f}  p75 {pct(scores,.75):.0f}  "
           f"max {max(scores)}")
@@ -127,6 +127,12 @@ def report(rows: list[dict]) -> dict:
               f"{statistics.median(v):>7.2f}{pct(v,.75):>7.2f}{max(v):>7.2f}")
     ci = sum(1 for r in rows if r["has_ci"])
     print(f"\nhas_ci true: {ci}/{len(rows)} ({100*ci/len(rows):.0f}%)")
+
+    print(f"\nby language:")
+    from collections import Counter
+    for lg, cnt in Counter(r["langs"] for r in rows).most_common():
+        v = [r["score"] for r in rows if r["langs"] == lg]
+        print(f"  {lg or '?':<22} n={cnt:<3} median {statistics.median(v):>5.1f}")
 
     print(f"\nby corpus tier:")
     for t in ("flagship", "mid", "small"):

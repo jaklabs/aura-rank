@@ -2,13 +2,13 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.3.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.5.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
-|  AURA  ·  local scan  ·  spec v0.3.0                         |
+|  AURA  ·  local scan  ·  spec v0.5.0                         |
 +--------------------------------------------------------------+
-|  APEX   90/100                                               |
+|  SOVEREIGN   87/100                                               |
 |  best-in-class. Reference-grade engineering                  |
 |  self-assessed · 4 of 8 dimensions measured                  |
 +--------------------------------------------------------------+
@@ -19,7 +19,7 @@ Working name. Spec `v0.3.0`. Early, opinionated, and open on purpose.
 +--------------------------------------------------------------+
    Nothing left this machine.
 ```
-<sub>`pallets/flask`, scanned locally. Nothing about it left the machine.</sub>
+<sub>`pallets/flask`, scanned locally in 0.4s. Nothing about it left the machine.</sub>
 
 ---
 
@@ -97,7 +97,7 @@ will not pretend otherwise.
 | Dimension | Source | Why |
 |---|---|---|
 | **Ship** | measured | tests, CI, release tags, tenure, project shape |
-| **Architecture** | measured | function length + nesting distributions, substrate breadth, typing |
+| **Architecture** | measured | function length + nesting distributions, substrate breadth, typing (`: any` doesn't count) |
 | **Judgment** | measured | revisit ratio, exception precision, cadence |
 | **Transmission** | measured | doc ratio, docstring coverage, contributors |
 | **Embed** | claim + witness | whether you can sit with a customer is not in your AST |
@@ -144,13 +144,14 @@ a tool that asks you to trust it should not ask you to install forty packages fi
 - [x] Open scoring spec, versioned
 - [x] Terminal rank card
 - [x] Calibration against a public corpus — bands anchored + validated
-- [ ] JS/TS and Go analyzers
+- [x] JS/TS analyzer — hand-written scanner, zero dependencies
+- [ ] Go and Rust analyzers
 - [ ] `aura attest` (public signals, separate binary)
 - [ ] Witness protocol
 
 ### Calibrated — with stated bias
 
-Bands are set against a corpus of 36 public Python libraries plus a sample of real private
+Bands are set against a corpus of 52 public Python/JS/TS repositories plus real private
 work, and **validated rather than percentile-fitted** — fitting to the public corpus alone
 would put every genuine user in the bottom band. Reproduce it:
 
@@ -158,10 +159,10 @@ would put every genuine user in the bottom band. Reproduce it:
 python3 tools/calibrate.py --clone
 ```
 
-Anchors: `pallets/flask` **90** (Apex) · `simonw/datasette` **83** · `psf/requests` **79** ·
-`scrapy/scrapy` **74**. A typical solo project lands 15–45.
+Anchors: `scrapy` **88** · `flask` **87** · `fastapi` **86** · `requests` **84** · `express`
+**78** · `axios` **76** · `zod` **72**. A typical solo project lands 15–45.
 
-**The corpus is small (n=36), elite, and Python-only.** It anchors the top of the scale
+**The corpus is small (n=52), elite, and covers three languages.** It anchors the top of the scale
 credibly and says little about the middle. The per-dimension breakdown is the useful output;
 the single number is provisional. Full method, the three bugs calibration exposed, and every
 known bias: **[tools/CALIBRATION.md](tools/CALIBRATION.md)**.

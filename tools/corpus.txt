@@ -39,3 +39,23 @@ small  seatgeek/thefuzz
 small  lincolnloop/python-qrcode
 small  cdgriffith/Box
 small  chrisdonahue/wavegan
+#
+# JavaScript / TypeScript — added at spec v0.4.0 with the JS analyzer.
+flagship  expressjs/express
+flagship  axios/axios
+flagship  prettier/prettier
+flagship  chalk/chalk
+flagship  date-fns/date-fns
+mid  colinhacks/zod
+mid  pmndrs/zustand
+mid  vercel/swr
+mid  sindresorhus/got
+mid  sindresorhus/execa
+mid  nodemailer/nodemailer
+mid  developit/mitt
+small  motdotla/dotenv
+small  sindresorhus/p-limit
+small  sindresorhus/ora
+small  lukeed/clsx
+small  bvaughn/react-window
+small  jonschlinkert/randomatic
