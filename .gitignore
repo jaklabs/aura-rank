@@ -2,3 +2,8 @@
 __pycache__/
 *.pyc
 tools/calibration.json
+dist/
+build/
+*.egg-info/
+npm/node_modules/
+npm/*.tgz

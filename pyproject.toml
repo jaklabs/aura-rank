@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aura-rank"
+version = "0.0.1"
+description = "A developer rank that never sees your code. Scores your repositories offline."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "JAK Labs" }]
+keywords = ["developer", "rank", "static-analysis", "code-quality", "offline", "privacy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+
+# Empty, and it stays empty. The zero-dependency property is what makes this
+# auditable -- a tool asking you to trust it should not ask you to install forty
+# packages first. CI parses this list and fails the build if anything appears.
+dependencies = []
+
+[project.urls]
+Homepage = "https://rank.jaklabs.io"
+Source = "https://github.com/jaklabs/aura-rank"
+Issues = "https://github.com/jaklabs/aura-rank/issues"
+
+[project.scripts]
+# `aurarank`, not `aura` -- PyPI's `aura` (an unrelated agentic TUI) installs a
+# command by that name, and two packages fighting over one PATH entry is a bug
+# for whoever installs both.
+aurarank = "aurarank.cli:main"
+
+[tool.setuptools]
+packages = ["aurarank"]

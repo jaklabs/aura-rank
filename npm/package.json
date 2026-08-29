@@ -1,0 +1,14 @@
+{
+  "name": "aurarank",
+  "version": "0.0.1",
+  "description": "A developer rank that never sees your code. Runs the aura-rank scanner offline; your source never leaves your machine.",
+  "bin": { "aurarank": "bin/aurarank.js" },
+  "files": ["bin", "README.md"],
+  "keywords": ["developer", "rank", "static-analysis", "code-quality", "offline", "privacy"],
+  "homepage": "https://rank.jaklabs.io",
+  "repository": { "type": "git", "url": "git+https://github.com/jaklabs/aura-rank.git", "directory": "npm" },
+  "bugs": { "url": "https://github.com/jaklabs/aura-rank/issues" },
+  "license": "MIT",
+  "author": "JAK Labs",
+  "engines": { "node": ">=16" }
+}
