@@ -170,5 +170,12 @@ known bias: **[tools/CALIBRATION.md](tools/CALIBRATION.md)**.
 
 ## Licence
 
-TBD — intended permissive (MIT or Apache-2.0) so it can be forked, audited and embedded
-freely. Auditability is the entire value proposition; a restrictive licence would defeat it.
+**MIT.** Fork it, audit it, embed it, sell something built on it. Auditability is the
+entire value proposition here — a restrictive licence would defeat the point of the tool.
+
+_(Apache-2.0 was the alternative and adds an explicit patent grant; MIT was chosen for
+being shorter and more permissive. Say so if you want it swapped.)_
+
+---
+
+Built by [JAK Labs](https://jaklabs.io) · [rank.jaklabs.io](https://rank.jaklabs.io)
