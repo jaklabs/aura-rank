@@ -136,7 +136,11 @@ If it works at all, people will game it. Design consequences:
 ## Quick start
 
 ```bash
-git clone <repo> && cd aura-rank
+pip install aura-rank                             # once published
+aurarank scan ~/code/your-project
+
+# or from a clone, with nothing installed at all
+git clone https://github.com/jaklabs/aura-rank && cd aura-rank
 python3 -m aurarank.scan ~/code/your-project          # stdlib only. no install, no deps.
 python3 -m aurarank.scan ~/code/your-project --print  # audit the exact payload
 python3 -m aurarank.scan ~/code/your-project --json me.json

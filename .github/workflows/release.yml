@@ -1,0 +1,96 @@
+name: Release
+
+# Publishes to PyPI on a version tag, using Trusted Publishing (OIDC).
+#
+# Chosen over `twine upload` from a laptop deliberately: no API token is created,
+# stored on a machine, or pasted into GitHub secrets. PyPI verifies the identity
+# of this exact workflow in this exact repository and issues a short-lived
+# credential for one upload. Nothing long-lived exists to leak.
+#
+# One-time setup on PyPI (a web form, no token):
+#   pypi.org -> Your projects -> Publishing -> Add a pending publisher
+#     PyPI project name : aura-rank
+#     Owner             : jaklabs
+#     Repository name   : aura-rank
+#     Workflow name     : release.yml
+#     Environment name  : pypi
+#
+# Then:  git tag v0.0.1 && git push origin v0.0.1
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  verify:
+    # The full test suite gates the release. A version that cannot pass its own
+    # trust guarantee has no business being installable by strangers.
+    name: verify before release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 tests/test_no_network.py
+      - run: python3 tests/test_langs.py
+      - run: python3 tests/test_portfolio.py
+
+  build:
+    name: build distributions
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install --upgrade build twine
+      - run: python3 -m build
+      - run: python3 -m twine check dist/*
+
+      - name: Tag must match the version in pyproject.toml
+        # A mismatch here ships a release whose git tag lies about its contents,
+        # and PyPI will not let the version be corrected afterwards.
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, sys
+          tag = os.environ.get('GITHUB_REF_NAME', '')
+          if not tag.startswith('v'):
+              print(f'not a version tag ({tag!r}); skipping check')
+              sys.exit(0)
+          text = pathlib.Path('pyproject.toml').read_text()
+          declared = re.search(r'^version\s*=\s*"([^"]+)"', text, re.M).group(1)
+          assert tag[1:] == declared, f'tag {tag} != pyproject version {declared}'
+          print(f'tag {tag} matches pyproject version {declared}')
+          PY
+
+      - name: Installed wheel pulls no third-party dependencies
+        run: |
+          python3 -m venv /tmp/clean
+          /tmp/clean/bin/pip install --quiet dist/*.whl
+          EXTRA=$(/tmp/clean/bin/pip list --format=freeze \
+            | grep -viE '^pip==|^setuptools==|^wheel==|^aura-rank==' || true)
+          test -z "$EXTRA" || { echo "unexpected dependencies: $EXTRA"; exit 1; }
+          /tmp/clean/bin/aurarank --help > /dev/null
+          echo "clean install, console script runs"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write        # the whole point: OIDC instead of a stored token
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
