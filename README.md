@@ -62,10 +62,17 @@ Split the scan from the claim.
 the source, and you verify it yourself before you ever run the thing:
 
 ```bash
-grep -nE 'requests|urllib|http|socket|aiohttp|curl' aura/scan.py
+grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aura/
 ```
 
-The only matches are in the docstring telling you to run that command.
+The only matches are the docstrings telling you to run it.
+
+**One honest caveat, because a half-true guarantee is worse than none:** the scanner
+does use `subprocess` — to run `git`, which is how it reads your commit history. A grep
+can't distinguish "runs git" from "runs anything," so that's enforced by a test instead.
+[`tests/test_no_network.py`](tests/test_no_network.py) parses every module and fails if a
+subprocess call ever invokes something other than `git`, if any network library is
+imported, or if `shell=True`, `eval` or `exec` appear. CI runs it on every push.
 
 Everything it emits is integers and ratios. No source text, no file contents, no absolute
 paths, no email addresses (author identities are hashed on read and never stored). Read the

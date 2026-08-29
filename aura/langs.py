@@ -4,9 +4,15 @@ Per-language source analyzers. Pure text in, counters out.
     NO NETWORK. NO DEPENDENCIES. NO CODE EXECUTION.
 
 Nothing here imports a network library, and nothing here evaluates or executes the
-source it reads -- it is only ever parsed or scanned as text. Verify both:
+source it reads -- it is only ever parsed or scanned as text:
 
-    grep -rnE 'requests|urllib|http|socket|subprocess|eval|exec\\(' aura/
+    grep -rnE 'requests|urllib|http|socket|aiohttp|httpx|ssl' aura/
+
+The package DOES use `subprocess`, in scan.py, exclusively to invoke `git` and
+read local history. That is the honest version of the claim, and a grep cannot
+tell "runs git" from "runs anything", so it is enforced by a test instead:
+tests/test_no_network.py asserts every subprocess call has the literal "git" as
+its executable, and CI runs it on every push.
 
 Python uses the standard-library `ast` module. JavaScript and TypeScript have no
 parser in the standard library and adding one would mean a dependency, so they get

@@ -75,6 +75,14 @@ def test_spread_reports_best_minus_median():
     assert s["best"] == 80 and s["median"] == 40 and s["spread"] == 40
 
 
+def test_all_weights_zero_falls_back_to_equal_weighting():
+    # An identity that authored none of the repos gives every weight 0. The
+    # weighted mean then divided by a substituted 1.0 and returned 0 -- a real
+    # 50-point repo reported as DORMANT. Unweighted is defensible; zero is not.
+    rs = [repo("a", 50, weight=0.0), repo("b", 50, weight=0.0)]
+    assert aggregate(rs, MONTHS)["score"] == 50
+
+
 # --- attribution rules -------------------------------------------------------
 from aura.scan import attribute_commit, _classify
 

@@ -160,6 +160,15 @@ def aggregate(repos: list[dict], months_union: set[str]) -> dict:
 
     repos = list(repos)
     repos.sort(key=lambda r: -r["score"])
+
+    # Every weight can legitimately be zero -- e.g. an identity that authored
+    # none of the scanned repos, with --min-share 0. Dividing by a substituted
+    # 1.0 then collapses the weighted mean to 0, reporting a real 42-point repo
+    # as DORMANT. Fall back to equal weighting: unweighted is a defensible
+    # answer, a fabricated zero is not.
+    if not any(r["weight"] for r in repos):
+        for r in repos:
+            r["weight"] = 1.0
     total_w = sum(r["weight"] for r in repos) or 1.0
 
     # The core body of work: best repos covering CORE_COVERAGE of total weight.
