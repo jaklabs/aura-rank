@@ -92,7 +92,7 @@ Named anchors: `pallets/flask` **90** (Apex) · `simonw/datasette` **83** · `ps
    It is kept because it discriminates sharply against typical private work, which is the
    population that will actually run this.
 5. **Repos are not developers.** A single score describes one repository; use
-   `nen portfolio` for a person. Since v0.7.0 agent-authored commits count as the
+   `aura portfolio` for a person. Since v0.7.0 agent-authored commits count as the
    directing human's work, so AI-assisted development is no longer diluted.
 6. **`hash()` was unstable until v0.6.0.** Identifier hashes in payloads from earlier
    versions changed on every run and cannot be compared. Fixed with blake2s.

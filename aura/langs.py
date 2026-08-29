@@ -6,7 +6,7 @@ Per-language source analyzers. Pure text in, counters out.
 Nothing here imports a network library, and nothing here evaluates or executes the
 source it reads -- it is only ever parsed or scanned as text. Verify both:
 
-    grep -rnE 'requests|urllib|http|socket|subprocess|eval|exec\\(' nen/
+    grep -rnE 'requests|urllib|http|socket|subprocess|eval|exec\\(' aura/
 
 Python uses the standard-library `ast` module. JavaScript and TypeScript have no
 parser in the standard library and adding one would mean a dependency, so they get

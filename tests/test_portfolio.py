@@ -5,7 +5,7 @@ makes a real judgement call. These pin that behaviour down.
 """
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from nen.portfolio import aggregate, CORE_COVERAGE
+from aura.portfolio import aggregate, CORE_COVERAGE
 
 
 def repo(name, score, weight=10.0, dims=None):
@@ -76,7 +76,7 @@ def test_spread_reports_best_minus_median():
 
 
 # --- attribution rules -------------------------------------------------------
-from nen.scan import attribute_commit, _classify
+from aura.scan import attribute_commit, _classify
 
 ME = {"me@example.com"}
 

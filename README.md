@@ -1,4 +1,4 @@
-# NEN
+# AURA
 
 **A developer rank you can actually verify — that never sees your code.**
 
@@ -6,7 +6,7 @@ Working name. Spec `v0.7.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
-|  NEN   ·  local scan  ·  spec v0.5.0                         |
+|  AURA  ·  local scan  ·  spec v0.5.0                         |
 +--------------------------------------------------------------+
 |  SOVEREIGN   87/100                                               |
 |  best-in-class. Reference-grade engineering                  |
@@ -42,7 +42,7 @@ Split the scan from the claim.
 ```
   LOCAL — never leaves your machine        PUBLIC — opt-in, independently checkable
   +-------------------------------+        +----------------------------------+
-  |  nen scan ./repo             |        |  nen attest                     |
+  |  aura scan ./repo             |        |  aura attest                     |
   |    git metadata (dates only)  |        |    published packages            |
   |    file tree structure        |        |    public repos + dependents     |
   |    AST metrics (counts only)  |        |    merged contributions          |
@@ -58,11 +58,11 @@ Split the scan from the claim.
                   +---------------------------------------+
 ```
 
-`nen scan` **contains no network code.** That is not a privacy policy, it is a property of
+`aura scan` **contains no network code.** That is not a privacy policy, it is a property of
 the source, and you verify it yourself before you ever run the thing:
 
 ```bash
-grep -nE 'requests|urllib|http|socket|aiohttp|curl' nen/scan.py
+grep -nE 'requests|urllib|http|socket|aiohttp|curl' aura/scan.py
 ```
 
 The only matches are in the docstring telling you to run that command.
@@ -72,7 +72,7 @@ paths, no email addresses (author identities are hashed on read and never stored
 exact payload before you share it with anyone:
 
 ```bash
-python3 -m nen.scan ./your-repo --print
+python3 -m aura.scan ./your-repo --print
 ```
 
 ## Three tiers of claim
@@ -129,10 +129,10 @@ If it works at all, people will game it. Design consequences:
 ## Quick start
 
 ```bash
-git clone <repo> && cd nen-rank
-python3 -m nen.scan ~/code/your-project          # stdlib only. no install, no deps.
-python3 -m nen.scan ~/code/your-project --print  # audit the exact payload
-python3 -m nen.scan ~/code/your-project --json me.json
+git clone <repo> && cd aura-rank
+python3 -m aura.scan ~/code/your-project          # stdlib only. no install, no deps.
+python3 -m aura.scan ~/code/your-project --print  # audit the exact payload
+python3 -m aura.scan ~/code/your-project --json me.json
 ```
 
 Requires Python 3.9+ and `git`. Nothing else. There are no dependencies, deliberately —
@@ -144,10 +144,10 @@ a tool that asks you to trust it should not ask you to install forty packages fi
 - [x] Open scoring spec, versioned
 - [x] Terminal rank card
 - [x] Calibration against a public corpus — bands anchored + validated
-- [x] Multi-repo aggregation — `nen portfolio`
+- [x] Multi-repo aggregation — `aura portfolio`
 - [x] JS/TS analyzer — hand-written scanner, zero dependencies
 - [ ] Go and Rust analyzers
-- [ ] `nen attest` (public signals, separate binary)
+- [ ] `aura attest` (public signals, separate binary)
 - [ ] Witness protocol
 
 ### Calibrated — with stated bias

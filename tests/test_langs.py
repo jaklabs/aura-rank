@@ -6,7 +6,7 @@ is one the scanner previously got wrong, or one it would be easy to break.
 """
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from nen import langs
+from aura import langs
 
 TS = '''
 /** Adds numbers. */
