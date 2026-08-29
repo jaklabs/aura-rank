@@ -209,6 +209,29 @@ mid-run.
 | Sovereign | 78–84 | 2% | 42% |
 | Apex | 85–100 | 0% | 10% |
 
-**Still provisional.** n=54 anonymous repositories is enough to correct an obvious
-bias and not enough to settle a scale. Apex remains unoccupied by either corpus.
-Re-run `tools/discover.py` and `tools/recalibrate.py` as the sample grows.
+### Deepened to n=82 — and the bands held
+
+Doubling the sample (54 -> 82) moved the population median only 48 -> 49, and a
+score of 39 stayed in the same band through the refit. **That stability is the
+first evidence the scale is converging** rather than tracking whatever happened to
+be sampled last. The bands shifted by 1-3 points at the edges and not at all in
+their meaning.
+
+| Band | Range | Anonymous % |
+|---|---|---:|
+| Dormant | 0–23 | 6% |
+| Kindled | 24–33 | 16% |
+| Drawn | 34–42 | 22% |
+| Formed | 43–53 | 20% |
+| Marked | 54–61 | 15% |
+| Sealed | 62–77 | 18% |
+| Sovereign | 78–84 | 2% |
+| Apex | 85–100 | 0% |
+
+**Still provisional, on two counts.** Apex remains occupied by nobody in either
+corpus — either its floor is too high or it is correctly rarer than 134 repos can
+sample. And the anonymous corpus is public code only; private and client work,
+which is most software, is invisible to any sampler by construction.
+
+One operational note: GitHub search allows roughly 30 queries a minute. The
+sampler slept 1 second between them and got rate-limited; it now sleeps 2.5.

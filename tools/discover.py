@@ -165,7 +165,7 @@ def main() -> None:
             for window, wweight in ACTIVITY:
                 q = f"language:{lang} {stars} {window}"
                 targets += gh_search(q, max(1, per_round * weight * wweight // 2))
-                time.sleep(1)      # courteous to the search API
+                time.sleep(2.5)    # GitHub search allows ~30/min; 1s was too fast and got 429s
 
     targets = [t for t in dict.fromkeys(targets) if stable_hash(t) not in seen][:a.limit]
     print(f"{len(targets)} new candidates\n")
