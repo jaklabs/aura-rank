@@ -134,6 +134,53 @@ def test_service_localparts_are_machines_on_any_domain():
     assert _classify("agent@rork.com") == "agent"
 
 
+# --- transmission scoring ---------------------------------------------------
+from aurarank.scan import score  # noqa: E402
+
+
+def _dims(contributors, readme=0.5, doc_ratio=0.2, docstrings=0.5):
+    g = {"is_git_repo": True, "contributors": contributors, "tags": 3,
+         "tenure_days": 400, "revisit_ratio": 0.4, "cadence": 0.8}
+    t = {"test_ratio": 0.2, "has_ci": True, "has_docs": True, "doc_ratio": doc_ratio,
+         "readme_depth": readme, "substrate_breadth": 2, "packaged": True,
+         "production_shape": False, "source_files": 20}
+    p = {"parsed_files": 10, "fn_len_p90": 30, "nesting_p90": 2,
+         "type_coverage": 0.5, "docstring_coverage": docstrings,
+         "except_precision": 0.8}
+    return score(g, t, p)["dimensions"]
+
+
+def test_working_alone_does_not_cost_transmission():
+    """The flaw this replaced.
+
+    Contributor count was 25% of transmission, and a solo developer scores zero
+    on it by definition -- forfeiting a quarter of "can you make other people
+    good" for having no colleagues. On a tool built for developers without a
+    company behind them that is exactly backwards. Solo must not be punished.
+    """
+    solo = _dims(contributors=1)["transmission"]
+    pair = _dims(contributors=2)["transmission"]
+    assert solo >= pair - 0.5, (
+        f"solo {solo} is penalised against a 2-contributor repo {pair}")
+
+
+def test_many_contributors_still_earns_credit():
+    """Dropping the signal when absent must not mean ignoring it when present --
+    sustaining a group of contributors is real transmission."""
+    assert _dims(contributors=20)["transmission"] > _dims(contributors=2)["transmission"]
+
+
+def test_a_readme_that_teaches_beats_one_that_exists():
+    """Something a solo developer can actually move, unlike contributor count."""
+    assert _dims(1, readme=1.0)["transmission"] > _dims(1, readme=0.0)["transmission"] + 1.5
+
+
+def test_docstrings_still_matter_most_alongside_docs():
+    poor = _dims(1, doc_ratio=0.0, docstrings=0.0)["transmission"]
+    rich = _dims(1, doc_ratio=0.35, docstrings=0.8)["transmission"]
+    assert rich > poor + 4
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

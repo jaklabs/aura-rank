@@ -40,7 +40,7 @@ from pathlib import Path
 
 from . import langs
 
-SPEC_VERSION = "0.9.0"
+SPEC_VERSION = "0.10.0"
 
 
 def stable_hash(text: str) -> str:
@@ -391,6 +391,28 @@ def tree_signals(repo: Path) -> tuple[dict, list[Path], list[Path]]:
     blob = "\n".join(rel_all)
     has = lambda markers: any(m.lower() in blob for m in markers)
     n_doc = sum(1 for r in rel_all if r.endswith((".md", ".rst", ".adoc")))
+
+    # Does the README teach, or merely exist? A title and a badge is not
+    # transmission. Usage examples, real headings and enough prose to orient a
+    # stranger are -- and unlike contributor count, a solo developer controls
+    # every one of them.
+    readme_depth = 0.0
+    for cand in ("README.md", "readme.md", "README.rst", "Readme.md"):
+        f = repo / cand
+        if not f.exists():
+            continue
+        try:
+            text = f.read_text(errors="ignore")
+        except OSError:
+            break
+        words = len(text.split())
+        fences = text.count("```")
+        heads = sum(1 for ln in text.splitlines() if ln.lstrip().startswith("#"))
+        readme_depth = round(min(1.0,
+            0.40 * min(1.0, words / 400)
+            + 0.35 * min(1.0, fences / 6)
+            + 0.25 * min(1.0, heads / 8)), 3)
+        break
     # Library-shaped and service-shaped repos prove "ship" differently. A library
     # with no Terraform is not deficient, it is a library -- so each shape gets a
     # route to full marks instead of being scored against the other's checklist.
@@ -427,6 +449,7 @@ def tree_signals(repo: Path) -> tuple[dict, list[Path], list[Path]]:
         "has_docs": has(DOC_MARKERS),
         "doc_files": n_doc,
         "doc_ratio": round(n_doc / n_src, 3) if n_src else 0.0,
+        "readme_depth": readme_depth,
         "packaged": packaged,
         "production_shape": has(IAC_MARKERS) or has(MIGRATION_MARKERS),
         "dependencies": deps,
@@ -581,11 +604,21 @@ def score(g: dict, t: dict, p: dict, tq: dict | None = None) -> dict:
         (0.25, _band(g.get("cadence", 0), 0.15, 0.95)),
     ])
 
+    # Contributor count was 25% of this dimension and a solo developer scores
+    # zero on it by definition -- forfeiting a quarter of "can you make other
+    # people good" for working alone. On a tool built for developers without a
+    # company behind them that is precisely backwards, and it was measuring
+    # REACH (did others join) rather than transmission (is the work legible).
+    #
+    # So it is DROPPED when a repo is solo, not scored zero. Nobody having
+    # joined is a different fact from teaching badly. Where collaborators do
+    # exist it still counts, because sustaining them is real transmission.
+    solo = g.get("contributors", 1) <= 1
     transmission = 10 * _weighted([
-        (0.30, _band(t["doc_ratio"], 0, 0.35)),
-        (0.30, _band(p["docstring_coverage"], 0, 0.8) if has_ast else None),
-        (0.25, _band(g.get("contributors", 1), 1, 25)),
-        (0.15, 1.0 if t["has_docs"] else 0.0),
+        (0.28, _band(t["doc_ratio"], 0, 0.35)),
+        (0.28, _band(p["docstring_coverage"], 0, 0.8) if has_ast else None),
+        (0.24, t.get("readme_depth", 0.0)),
+        (0.20, None if solo else _band(g["contributors"], 1, 25)),
     ])
 
     dims: dict[str, float] = {"rigour": round(rigour, 1)}

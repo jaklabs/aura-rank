@@ -2,7 +2,7 @@
 
 **A developer rank you can actually verify — that never sees your code.**
 
-Working name. Spec `v0.9.0`. Early, opinionated, and open on purpose.
+Working name. Spec `v0.10.0`. Early, opinionated, and open on purpose.
 
 ```
 +--------------------------------------------------------------+
@@ -106,7 +106,7 @@ will not pretend otherwise.
 | **Rigour** | measured | test **breadth** and **depth**, CI, release tags, tenure, project shape |
 | **Architecture** | measured | function length + nesting distributions, substrate breadth, typing (`: any` doesn't count) |
 | **Judgment** | measured | revisit ratio, exception precision, cadence |
-| **Transmission** | measured | doc ratio, docstring coverage, contributors |
+| **Transmission** | measured | doc ratio, docstring coverage, README substance, contributors (dropped when solo) |
 | **Embed** | claim + witness | whether you can sit with a customer is not in your AST |
 | **Fundamentals** | optional challenge | a timed exercise, not a repo property |
 | **Reach** | attested | dependents, installs — public by nature |
@@ -127,6 +127,20 @@ The tool never executes anything, so it **cannot measure coverage** — depth is
 static proxies, and the payload says so in a `tests` block you can read. A repo with no
 tests reports depth as *unmeasured*, not zero: absent is already punished by breadth,
 and counting it twice would double-penalise.
+
+### Working alone is not a transmission failure
+
+Contributor count used to be 25% of Transmission, which meant a solo developer
+forfeited a quarter of *"can you make other people good"* for having no colleagues —
+on a tool built specifically for developers without a company behind them. It was also
+measuring the wrong thing: whether others **joined** is reach, not whether the work is
+**legible**.
+
+So contributors is now **dropped when a repo is solo**, not scored zero — nobody having
+joined is a different fact from teaching badly — and it still counts where collaborators
+exist, because sustaining them is real transmission. In its place, **README substance**:
+does the README teach, or merely exist? Usage examples, real headings, enough prose to
+orient a stranger. A solo developer controls every one of those.
 
 ### The load-bearing signal
 
