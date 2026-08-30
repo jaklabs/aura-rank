@@ -206,6 +206,13 @@ credibly and says little about the middle. The per-dimension breakdown is the us
 the single number is provisional. Full method, the three bugs calibration exposed, and every
 known bias: **[tools/CALIBRATION.md](tools/CALIBRATION.md)**.
 
+## Contributing
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) carries the engineering rules this project runs on —
+four questions derived from bugs that actually shipped here, including the one that would
+have published a stranger's work under a famous developer's name. PRs against the scoring
+spec are the most welcome kind.
+
 ## Licence
 
 **MIT.** Fork it, audit it, embed it, sell something built on it. Auditability is the
