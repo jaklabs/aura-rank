@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aura-rank"
-version = "0.0.1"
+version = "0.1.2"
 description = "A developer rank that never sees your code. Scores your repositories offline."
 readme = "README.md"
 requires-python = ">=3.9"
