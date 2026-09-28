@@ -42,7 +42,7 @@ Split the scan from the claim.
 ```
   LOCAL — never leaves your machine        PUBLIC — opt-in, independently checkable
   +-------------------------------+        +----------------------------------+
-  |  aura scan ./repo             |        |  aura attest                     |
+  |  aurarank scan ./repo         |        |  aurarank attest                 |
   |    git metadata (dates only)  |        |    published packages            |
   |    file tree structure        |        |    public repos + dependents     |
   |    AST metrics (counts only)  |        |    merged contributions          |
@@ -58,7 +58,7 @@ Split the scan from the claim.
                   +---------------------------------------+
 ```
 
-`aura scan` **contains no network code.** That is not a privacy policy, it is a property of
+`aurarank scan` **contains no network code.** That is not a privacy policy, it is a property of
 the source, and you verify it yourself before you ever run the thing:
 
 ```bash
@@ -162,13 +162,11 @@ If it works at all, people will game it. Design consequences:
 
 ## Quick start
 
-```bash
-pip install aura-rank                             # once published
-aurarank scan ~/code/your-project
+No install. No dependencies. Clone it and run it:
 
-# or from a clone, with nothing installed at all
+```bash
 git clone https://github.com/jaklabs/aura-rank && cd aura-rank
-python3 -m aurarank.scan ~/code/your-project          # stdlib only. no install, no deps.
+python3 -m aurarank.scan ~/code/your-project          # stdlib only
 python3 -m aurarank.scan ~/code/your-project --print  # audit the exact payload
 python3 -m aurarank.scan ~/code/your-project --json me.json
 ```
@@ -176,16 +174,27 @@ python3 -m aurarank.scan ~/code/your-project --json me.json
 Requires Python 3.9+ and `git`. Nothing else. There are no dependencies, deliberately —
 a tool that asks you to trust it should not ask you to install forty packages first.
 
+Scanning several repositories at once:
+
+```bash
+python3 -m aurarank.portfolio ~/code/*/ --me you@example.com
+```
+
+⚠️ **`pip install aura-rank` does not work yet.** The package is not on PyPI —
+`pip` resolves nothing and the project page you may find there is a placeholder, not a
+release. This section used to lead with that command, which meant the first line anyone
+copied was the one that failed. It will be added here when it is real.
+
 ## Status
 
 - [x] Local scanner — git, tree, and Python AST signals
 - [x] Open scoring spec, versioned
 - [x] Terminal rank card
 - [x] Calibration against a public corpus — bands anchored + validated
-- [x] Multi-repo aggregation — `aura portfolio`
+- [x] Multi-repo aggregation — `aurarank portfolio`
 - [x] JS/TS analyzer — hand-written scanner, zero dependencies
 - [ ] Go and Rust analyzers
-- [ ] `aura attest` (public signals, separate binary)
+- [ ] `aurarank attest` (public signals, separate binary)
 - [ ] Witness protocol
 
 ### Calibrated — with stated bias
