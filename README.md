@@ -1,5 +1,7 @@
 # AURA
 
+[![CI](https://github.com/jaklabs/aura-rank/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jaklabs/aura-rank/actions/workflows/ci.yml)
+
 **A developer rank you can actually verify — that never sees your code.**
 
 Working name. Spec `v0.10.0`. Early, opinionated, and open on purpose.
