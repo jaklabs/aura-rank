@@ -1,21 +1,36 @@
 name: Release
 
-# Publishes to PyPI on a version tag, using Trusted Publishing (OIDC).
+# Publishes to PyPI on a version tag, using an API token in a repository secret.
 #
-# Chosen over `twine upload` from a laptop deliberately: no API token is created,
-# stored on a machine, or pasted into GitHub secrets. PyPI verifies the identity
-# of this exact workflow in this exact repository and issues a short-lived
-# credential for one upload. Nothing long-lived exists to leak.
+# ⚠️ THIS USED TO BE TRUSTED PUBLISHING (OIDC), AND THAT WAS THE BETTER DESIGN.
+# The argument for it still stands and is written down here so nobody has to
+# rediscover it: no long-lived credential exists, so there is nothing to leak,
+# nothing to rotate, and nothing to revoke if this repo is ever compromised. A
+# token is strictly worse on every one of those axes.
 #
-# One-time setup on PyPI (a web form, no token):
-#   pypi.org -> Your projects -> Publishing -> Add a pending publisher
-#     PyPI project name : aura-rank
-#     Owner             : jaklabs
-#     Repository name   : aura-rank
-#     Workflow name     : release.yml
-#     Environment name  : pypi
+# It was abandoned on 2026-09-29 after four consecutive `invalid-publisher`
+# failures — "valid token, but no corresponding publisher". Everything on the
+# GitHub side was verified correct: public repo jaklabs/aura-rank, environment
+# `pypi` present and sent in the claim, workflow_ref resolving to release.yml,
+# upload aimed at upload.pypi.org (not test.pypi.org). The publisher record on
+# PyPI never matched — the first attempt had the environment field blank, the
+# second was created on test.pypi.org, and the cause of the last two was never
+# identified. Three releases (v0.1.0, v0.1.1, v0.1.2) had failed to publish by
+# then and `pip install aura-rank` had never once worked.
 #
-# Then:  git tag v0.0.1 && git push origin v0.0.1
+# So this is a deliberate trade of a security property for a working release,
+# not a default anyone reached for. IF TRUSTED PUBLISHING IS EVER MADE TO WORK,
+# COME BACK AND UNDO THIS: delete the secret, restore `permissions: id-token:
+# write`, and drop the `password:` line. Git history has the original.
+#
+# One-time setup:
+#   1. pypi.org -> Account settings -> API tokens -> Add API token
+#      Scope it to the `aura-rank` project once that project exists; until the
+#      first upload it has to be account-scoped, so NARROW IT AFTERWARDS.
+#   2. gh secret set PYPI_API_TOKEN --repo jaklabs/aura-rank
+#      (reads from stdin — the value never goes in a file or a shell history)
+#
+# Then:  git tag v0.1.2 && git push origin v0.1.2
 
 on:
   push:
@@ -86,11 +101,35 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: pypi
-    permissions:
-      id-token: write        # the whole point: OIDC instead of a stored token
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: The token must exist before we try to use it
+        # Without this the run dies inside twine with a 403 that reads like PyPI
+        # rejected the package rather than like the secret was never set. A
+        # missing credential and a refused upload are different facts and must
+        # not produce the same failure.
+        env:
+          TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::PYPI_API_TOKEN is not set on this repository."
+            echo "Create one at pypi.org -> API tokens, then:"
+            echo "  gh secret set PYPI_API_TOKEN --repo jaklabs/aura-rank"
+            exit 1
+          fi
+          case "$TOKEN" in
+            pypi-*) echo "token present and shaped like a PyPI token" ;;
+            *) echo "::error::PYPI_API_TOKEN does not start with 'pypi-'."; exit 1 ;;
+          esac
+          # NOTE: this cannot tell a pypi.org token from a test.pypi.org one —
+          # both carry the 'pypi-' prefix. A test token fails later, at upload,
+          # with a 403. Said plainly rather than implied, because a check that
+          # looks like it verifies the index and does not is worse than no check.
+
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
