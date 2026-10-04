@@ -95,3 +95,69 @@ def position(score: int) -> dict:
         "nearest_score": nearest.score,
         "reference_measured_at": MEASURED_AT,
     }
+
+# The repositories each portfolio was BUILT FROM, so a reader can check the
+# measurement rather than take it on faith. Lifted from tools/measure_people.py,
+# which is the harness that produced REFERENCE above.
+#
+# ⚠️ THESE ARE THE REPOSITORIES CONSIDERED, NOT THE ONES SCORED, and for one
+# person those differ: Andrej Karpathy lists four and `repos` says three, because
+# a repository that cannot be measured on all four dimensions is dropped rather
+# than misrepresented (see the caveats at the top of this file). So anything
+# displaying this list must read `repos` for how many were actually scored and
+# must not claim every slug here contributed a number. Presenting four as
+# measured when three were is a small lie about a named stranger, which is
+# exactly what the reproducibility note above exists to prevent.
+CONSIDERED: dict[str, tuple[str, ...]] = {
+    'Hynek Schlawack': ('hynek__structlog', 'python-attrs__attrs',),
+    'David Lord': ('pallets__flask', 'pallets__jinja', 'pallets__click', 'pallets__itsdangerous',),
+    'Matteo Collina': ('pinojs__pino',),
+    'Feross Aboukhadijeh': ('feross__standard',),
+    'Sebastian Ramirez': ('tiangolo__typer', 'tiangolo__sqlmodel', 'tiangolo__asyncer', 'tiangolo__fastapi',),
+    'Will McGugan': ('Textualize__rich', 'Textualize__textual',),
+    'Tom Christie': ('encode__httpx', 'encode__starlette',),
+    'Sindre Sorhus': ('sindresorhus__got', 'sindresorhus__execa', 'sindresorhus__ora', 'sindresorhus__p-limit',),
+    'Simon Willison': ('simonw__datasette', 'simonw__sqlite-utils', 'simonw__llm', 'simonw__shot-scraper',),
+    'Ned Batchelder': ('nedbat__coveragepy',),
+    'Rich Harris': ('sveltejs__svelte', 'sveltejs__kit',),
+    'TJ Holowaychuk': ('expressjs__express',),
+    'Guillermo Rauch': ('socketio__socket.io',),
+    'Armin Ronacher': ('mitsuhiko__minijinja', 'mitsuhiko__insta',),
+    'Kent C. Dodds': ('kentcdodds__match-sorter',),
+    'Colin McDonnell': ('colinhacks__zod',),
+    'Luke Edwards': ('lukeed__clsx', 'lukeed__polka', 'lukeed__uvu',),
+    'Mitchell Hashimoto': ('mitchellh__libxev',),
+    'Anthony Sottile': ('asottile__pyupgrade', 'asottile__add-trailing-comma',),
+    'Fabrice Bellard': ('bellard__quickjs',),
+    'Andrej Karpathy': ('karpathy__nanoGPT', 'karpathy__micrograd', 'karpathy__minGPT', 'karpathy__nn-zero-to-hero',),
+}
+
+
+def roster() -> list[dict]:
+    """REFERENCE as plain JSON-able rows, newest calibration, best first.
+
+    Exists so a consumer (the jaklabs-crm rank page) can show the set a position
+    was computed against WITHOUT keeping its own copy. A second copy would drift,
+    and a roster that disagrees with the rank beside it is worse than no roster:
+    the page would say 21st of 22 next to a list the reader can count differently.
+    """
+    from .scan import tier_of
+    rows = []
+    for r in sorted(REFERENCE, key=lambda x: -x.score):
+        grade, blurb = tier_of(r.score)
+        rows.append({
+            "name": r.name,
+            "score": r.score,
+            "grade": grade,
+            "grade_means": blurb,
+            "dimensions": {
+                "rigour": r.rigour,
+                "architecture": r.architecture,
+                "judgment": r.judgment,
+                "transmission": r.transmission,
+            },
+            "craft": r.craft,
+            "repos_scored": r.repos,
+            "considered": list(CONSIDERED.get(r.name, ())),
+        })
+    return rows

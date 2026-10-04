@@ -51,6 +51,7 @@ jobs:
       - run: python3 tests/test_no_network.py
       - run: python3 tests/test_langs.py
       - run: python3 tests/test_portfolio.py
+      - run: python3 tests/test_reference.py
 
   build:
     name: build distributions

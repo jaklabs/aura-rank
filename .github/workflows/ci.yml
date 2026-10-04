@@ -66,6 +66,9 @@ jobs:
       - name: Portfolio aggregation and attribution
         run: python3 tests/test_portfolio.py
 
+      - name: The reference roster is verifiable
+        run: python3 tests/test_reference.py
+
       - name: Scan a real repository end to end
         # Self-scan: this checkout is a git repo full of Python, so one run
         # exercises git metadata, the tree walk, the AST pass and scoring together.
